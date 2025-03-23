@@ -1,0 +1,69 @@
+.editor-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  gap: 2px;
+  background-color: var(--bg-darker);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  overflow: hidden;
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.panel:first-child {
+  flex: 2;
+  border-right: 1px solid var(--border);
+}
+
+.panel:last-child {
+  flex: 1;
+}
+
+.panel.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  border-radius: 0;
+}
+
+.panel-header {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(to right, var(--panel-header), rgba(15, 15, 15, 0.9));
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.editor-wrapper {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-darker);
+}
+
+/* Add subtle glow to the editor */
+.monaco-editor .cursor {
+  box-shadow: 0 0 8px var(--primary-glow) !important;
+}
+
+.monaco-editor .selected-text {
+  background-color: rgba(139, 92, 246, 0.2) !important;
+}
+
+/* Rest of editor styles */ 

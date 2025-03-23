@@ -1,0 +1,54 @@
+.terminal {
+  flex: 1;
+  padding: 1.25rem;
+  background: var(--bg-darker);
+  font-family: 'Fira Code', monospace;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  overflow: auto;
+  height: 100%;
+  color: var(--text);
+  line-height: 1.5;
+  border-left: 1px solid var(--border);
+}
+
+.terminal::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.terminal::-webkit-scrollbar-track {
+  background: var(--bg-darker);
+}
+
+.terminal::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.terminal::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.output-success {
+  color: #10b981;
+  text-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
+}
+
+.output-error {
+  color: #ef4444;
+  text-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+}
+
+.output-info {
+  color: var(--primary-light);
+  text-shadow: 0 0 5px var(--primary-glow);
+}
+
+.output-time {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+/* Rest of output panel styles */ 

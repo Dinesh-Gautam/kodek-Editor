@@ -1,0 +1,138 @@
+.join-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-darker);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+}
+
+.join-form {
+  background-color: rgba(12, 12, 12, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px var(--primary-glow);
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.join-form:hover {
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 30px var(--primary-glow);
+  border-color: var(--primary-transparent);
+}
+
+.join-logo {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.join-logo h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+  text-shadow: 0 0 15px var(--primary-glow);
+  letter-spacing: -1px;
+}
+
+.join-tagline {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.join-form h2 {
+  color: var(--primary-light);
+  margin-bottom: 1.75rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+.input-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+  width: 85%;
+  height: auto;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 3rem;
+  background-color: rgba(18, 18, 18, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-transparent), 0 0 10px var(--primary-glow);
+  outline: none;
+}
+
+.input-group svg {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-light);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus + svg {
+  color: var(--primary);
+  opacity: 1;
+}
+
+.join-button {
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--primary-transparent);
+  color: white;
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px var(--primary-glow);
+  margin-top: 1rem;
+}
+
+.join-button:hover:not(:disabled) {
+  background-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.join-button:disabled {
+  background-color: var(--border);
+  border-color: var(--border);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.join-footer {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Rest of join room styles */

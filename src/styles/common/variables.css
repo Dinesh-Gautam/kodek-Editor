@@ -1,0 +1,24 @@
+:root {
+  --primary: #8b5cf6;
+  --primary-dark: #6d28d9;
+  --primary-light: #a78bfa;
+  --primary-lighter: #c4b5fd;
+  --primary-glow: rgba(139, 92, 246, 0.3);
+  --primary-transparent: rgba(139, 92, 246, 0.1);
+  
+  /* Darker background for minimalist look */
+  --bg-dark: #0a0a0a;
+  --bg-darker: #050505;
+  --card-bg: #0c0c0c;
+  --panel-bg: #0a0a0a;
+  --panel-header: #0f0f0f;
+  --input-bg: #121212;
+  
+  /* Cleaner text colors */
+  --text: #f8f9fa;
+  --text-secondary: #a1a1aa;
+  --border: #222222;
+  --border-light: #333333;
+  --border-glow: rgba(139, 92, 246, 0.2);
+  /* Rest of variables */
+} 

@@ -1,0 +1,22 @@
+.language-select {
+  padding: 0.5rem 1rem;
+  background: rgba(15, 15, 15, 0.6);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  outline: none;
+  backdrop-filter: blur(5px);
+}
+
+.language-select:hover, .language-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.language-select option {
+  background-color: var(--panel-bg);
+  color: var(--text);
+} 
