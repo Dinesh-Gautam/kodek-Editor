@@ -1,6 +1,8 @@
 import React from 'react';
 import Editor from "@monaco-editor/react";
 import '../../styles/Editor/CodeEditor.css';
+import Dock from '../../../reactbits/dock';
+import { VscHome, VscArchive, VscAccount, VscSettingsGear } from 'react-icons/vsc';
 
 export const CodeEditor = ({ 
   language, 
@@ -9,9 +11,27 @@ export const CodeEditor = ({
   handleEditorDidMount,
   isFullScreen,
   toggleFullScreen,
+  toggleOutput,
   runCode,
   isLoading 
 }) => {
+  // Handle the toggle output with additional debugging
+  const handleToggleOutput = () => {
+    console.log("Archive button clicked!");
+    if (typeof toggleOutput === 'function') {
+      toggleOutput();
+    } else {
+      console.error("toggleOutput is not a function");
+    }
+  };
+
+  const items = [
+    { icon: <VscHome size={18} />, label: 'Home', onClick: () => alert('Home!') },
+    { icon: <VscArchive size={18} />, label: 'Toggle Output', onClick: handleToggleOutput },
+    { icon: <VscAccount size={18} />, label: 'Profile', onClick: () => alert('Profile!') },
+    { icon: <VscSettingsGear size={18} />, label: 'Settings', onClick: () => alert('Settings!') },
+  ];
+
   return (
     <div className={`panel ${isFullScreen ? "fullscreen" : ""}`}>
       <div className="panel-header">
@@ -51,42 +71,52 @@ export const CodeEditor = ({
           )}
         </button>
       </div>
-      <div className="editor-wrapper">
-        <Editor
-          defaultLanguage={language}
-          language={language}
-          value={code}
-          onChange={handleCodeChange}
-          theme="vs-dark"
-          onMount={handleEditorDidMount}
-          options={{
-            fontSize: 14,
-            fontFamily: "'Fira Code', 'Consolas', monospace",
-            fontLigatures: true,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            lineNumbers: "on",
-            roundedSelection: true,
-            padding: { top: 16, bottom: 16 },
-            cursorStyle: "line",
-            cursorWidth: 2,
-            cursorBlinking: "smooth",
-            smoothScrolling: true,
-            tabSize: 2,
-            automaticLayout: true,
-            wordWrap: "on",
-            renderLineHighlight: "all",
-            scrollbar: {
-              verticalScrollbarSize: 8,
-              horizontalScrollbarSize: 8,
-              vertical: "visible",
-              horizontal: "visible",
-              verticalHasArrows: false,
-              horizontalHasArrows: false,
-              useShadows: false
-            }
-          }}
-        />
+      <div className="editor-layout">
+        <div className="dock-container">
+          <Dock 
+            items={items}
+            panelHeight={68}
+            baseItemSize={50}
+            magnification={70}
+          />
+        </div>
+        <div className="editor-wrapper">
+          <Editor
+            defaultLanguage={language}
+            language={language}
+            value={code}
+            onChange={handleCodeChange}
+            theme="vs-dark"
+            onMount={handleEditorDidMount}
+            options={{
+              fontSize: 14,
+              fontFamily: "'Fira Code', 'Consolas', monospace",
+              fontLigatures: true,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              lineNumbers: "on",
+              roundedSelection: true,
+              padding: { top: 16, bottom: 16 },
+              cursorStyle: "line",
+              cursorWidth: 2,
+              cursorBlinking: "smooth",
+              smoothScrolling: true,
+              tabSize: 2,
+              automaticLayout: true,
+              wordWrap: "on",
+              renderLineHighlight: "all",
+              scrollbar: {
+                verticalScrollbarSize: 8,
+                horizontalScrollbarSize: 8,
+                vertical: "visible",
+                horizontal: "visible",
+                verticalHasArrows: false,
+                horizontalHasArrows: false,
+                useShadows: false
+              }
+            }}
+          />
+        </div>
       </div>
     </div>
   );

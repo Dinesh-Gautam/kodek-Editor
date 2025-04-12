@@ -66,4 +66,23 @@
   background-color: rgba(139, 92, 246, 0.2) !important;
 }
 
-/* Rest of editor styles */ 
+/* Rest of editor styles */
+
+.editor-layout {
+  display: flex;
+  flex-direction: row;
+  height: calc(100% - 60px); /* Subtract header height */
+  width: 100%;
+}
+
+.dock-container {
+  height: 100%;
+  padding: 0.5rem;
+  border-right: 1px solid #222;
+}
+
+.editor-wrapper {
+  flex-grow: 1;
+  height: 100%;
+  position: relative;
+} 

@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import '../../styles/Editor/OutputPanel.css';
 
-export const OutputPanel = ({ isFullScreen, output, clearOutput }) => {
+export const OutputPanel = ({ isFullScreen, isOutputVisible, output, clearOutput }) => {
+  useEffect(() => {
+    console.log("OutputPanel: isOutputVisible changed to:", isOutputVisible);
+  }, [isOutputVisible]);
+  
+  // Use style display property instead of CSS classes for more direct control
+  const panelStyle = {
+    display: (!isOutputVisible || isFullScreen) ? 'none' : 'flex',
+  };
+  
   return (
-    <div className={`panel ${isFullScreen ? "hidden" : ""}`}>
+    <div 
+      className="panel" 
+      style={panelStyle}
+      data-visible={isOutputVisible}
+      data-fullscreen={isFullScreen}
+    >
       <div className="panel-header">
         <span>Output</span>
         <button className="button-secondary" onClick={clearOutput}>

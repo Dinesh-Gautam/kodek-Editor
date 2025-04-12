@@ -8,7 +8,9 @@ import io from "socket.io-client";
 import "./styles/common/variables.css";
 import "./styles/common/buttons.css";
 import "./styles/App.css";
+import Dock from "../reactbits/dock";
 
+ 
 const socket = io('http://localhost:3001', {
   timeout: 10000,
   forceNew: true,
@@ -58,6 +60,7 @@ const App = () => {
   const [output, setOutput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isOutputVisible, setIsOutputVisible] = useState(true);
   const [username, setUsername] = useState("");
   const [roomId, setRoomId] = useState("");
   const [isConnected, setIsConnected] = useState(false);
@@ -336,6 +339,12 @@ const App = () => {
   };
 
   const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
+  
+  const toggleOutput = () => {
+    console.log("Toggle output called, current state:", isOutputVisible);
+    setIsOutputVisible(prev => !prev);
+    console.log("Output visibility will change to:", !isOutputVisible);
+  };
 
   if (!joinedRoom) {
     return (
@@ -372,12 +381,14 @@ const App = () => {
             handleEditorDidMount={handleEditorDidMount}
             isFullScreen={isFullScreen}
             toggleFullScreen={toggleFullScreen}
+            toggleOutput={toggleOutput}
             runCode={runCode}
             isLoading={isLoading}
           />
 
           <OutputPanel
             isFullScreen={isFullScreen}
+            isOutputVisible={isOutputVisible}
             output={output}
             clearOutput={clearOutput}
           />
