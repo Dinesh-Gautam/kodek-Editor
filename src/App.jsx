@@ -67,6 +67,7 @@ const App = () => {
   const [editorInstance, setEditorInstance] = useState(null);
   const [userColors, setUserColors] = useState({});
   const [userCursors, setUserCursors] = useState({});
+  const [usernameError, setUsernameError] = useState(false);
 
   const joinRoom = () => {
     if (!isConnected) {
@@ -82,6 +83,7 @@ const App = () => {
     try {
       console.log(`Attempting to join room ${roomId} as ${username}`);
       setConnectionError(null);
+      setUsernameError(false);
 
       // Store username globally to identify self
       window.username = username;
@@ -131,7 +133,12 @@ const App = () => {
     socket.on('error', ({ message }) => {
       console.error('Server error:', message);
       setConnectionError(message);
-      if (message.includes('join') || message.includes('room')) {
+      
+      // Handle username already taken error
+      if (message.includes('Username is already taken')) {
+        setUsernameError(true);
+        setJoinedRoom(false);
+      } else if (message.includes('join') || message.includes('room')) {
         setJoinedRoom(false);
       }
     });
@@ -339,6 +346,7 @@ const App = () => {
         setRoomId={setRoomId}
         joinRoom={joinRoom}
         connectionError={connectionError}
+        usernameError={usernameError}
       />
     );
   }

@@ -72,15 +72,25 @@ io.on('connection', (socket) => {
         }
       }
 
-      // Join new room
-      socket.join(roomId);
-      currentRoom = roomId;
-
       // Initialize room if doesn't exist
       if (!rooms.has(roomId)) {
         console.log(`Creating new room: ${roomId}`);
         rooms.set(roomId, new Map());
       }
+
+      // Check if username already exists in the room
+      const existingUsers = Array.from(rooms.get(roomId).values());
+      const isDuplicateUsername = existingUsers.some(user => user.username === username);
+      
+      if (isDuplicateUsername) {
+        console.log(`Username ${username} is already taken in room ${roomId}`);
+        socket.emit('error', { message: 'Username is already taken in this room' });
+        return;
+      }
+
+      // Join new room
+      socket.join(roomId);
+      currentRoom = roomId;
 
       // Add user to room
       rooms.get(roomId).set(socket.id, { username, cursor: null });

@@ -75,6 +75,11 @@
   transition: all 0.3s ease;
 }
 
+.input-group input.error {
+  border-color: #ff4444;
+  box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.25);
+}
+
 .input-group input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px var(--primary-transparent), 0 0 10px var(--primary-glow);

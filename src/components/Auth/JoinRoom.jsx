@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import SplashCursor from '../../../reactbits/splashcursor'
 import '../../styles/Auth/JoinRoom.css';
 
-export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom, connectionError }) => {
+export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom, connectionError, usernameError }) => {
   const [isTyping, setIsTyping] = useState(false);
 
   // Memoize the splash cursor configuration
@@ -53,6 +53,7 @@ export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom, c
             onChange={(e) => setUsername(e.target.value)}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
+            className={usernameError ? "error" : ""}
           />
         </div>
         
@@ -83,7 +84,13 @@ export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom, c
           </svg>
         </button>
         
-        {connectionError && (
+        {usernameError && (
+          <div className="error-message">
+            Username is already taken. Please choose a different username.
+          </div>
+        )}
+        
+        {connectionError && !usernameError && (
           <div className="error-message">
             {connectionError}
           </div>
