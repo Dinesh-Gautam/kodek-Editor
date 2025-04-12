@@ -10,10 +10,15 @@ import "./styles/common/buttons.css";
 import "./styles/App.css";
 
 const socket = io('http://localhost:3001', {
+  timeout: 10000,
+  forceNew: true,
   reconnection: true,
   reconnectionAttempts: 5,
-  reconnectionDelay: 1000
+  reconnectionDelay: 1000,
 });
+
+// Track whether a code change is from a remote source to prevent echo
+let isRemoteChange = false;
 
 const languageOptions = {
   javascript: { id: 63, defaultCode: "// Write your JavaScript code here...\nconsole.log('Hello, World!');" },
@@ -55,90 +60,155 @@ const App = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [username, setUsername] = useState("");
   const [roomId, setRoomId] = useState("");
-  const [isJoined, setIsJoined] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
+  const [joinedRoom, setJoinedRoom] = useState(false);
   const [activeUsers, setActiveUsers] = useState([]);
   const [editorInstance, setEditorInstance] = useState(null);
   const [userColors, setUserColors] = useState({});
   const [userCursors, setUserCursors] = useState({});
-  const [connectionError, setConnectionError] = useState(false);
+
+  const joinRoom = () => {
+    if (!isConnected) {
+      setConnectionError('Not connected to server');
+      return;
+    }
+
+    if (!username || !roomId) {
+      setConnectionError('Username and Room ID are required');
+      return;
+    }
+
+    try {
+      console.log(`Attempting to join room ${roomId} as ${username}`);
+      setConnectionError(null);
+
+      // Store username globally to identify self
+      window.username = username;
+
+      // Join new room
+      socket.emit('joinRoom', { roomId, username });
+
+      // Set manually to true to immediately render editor while waiting for confirmation
+      setJoinedRoom(true);
+      
+      console.log("Joining room, redirecting to editor...");
+    } catch (error) {
+      console.error('Error joining room:', error);
+      setConnectionError('Failed to join room');
+    }
+  };
 
   useEffect(() => {
+    // Connection handlers
     socket.on('connect', () => {
       console.log('Connected to server');
-      setConnectionError(false);
+      setIsConnected(true);
+      setConnectionError(null);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+      setIsConnected(false);
+      setJoinedRoom(false);
     });
 
     socket.on('connect_error', (error) => {
       console.error('Connection error:', error);
-      setConnectionError(true);
+      setConnectionError('Failed to connect to server');
+      setIsConnected(false);
+      setJoinedRoom(false);
     });
 
-    socket.on('codeChange', (newCode) => {
-      if (newCode !== code) {
-        setCode(newCode);
+    // Room join confirmation
+    socket.on('roomJoined', ({ roomId, users }) => {
+      console.log(`Successfully joined room ${roomId}`);
+      setJoinedRoom(true);
+      setConnectionError(null);
+    });
+
+    // Error handling
+    socket.on('error', ({ message }) => {
+      console.error('Server error:', message);
+      setConnectionError(message);
+      if (message.includes('join') || message.includes('room')) {
+        setJoinedRoom(false);
       }
     });
 
-    socket.on('userList', (users) => {
-      // Generate and store colors for each user
+    // Connection testing
+    const pingInterval = setInterval(() => {
+      if (isConnected) {
+        socket.emit('ping', (response) => {
+          if (!response) {
+            console.warn('No ping response');
+            setConnectionError('Connection unstable');
+          } else {
+            setConnectionError(null);
+          }
+        });
+      }
+    }, 30000);
+
+    // Code change handler
+    const handleRemoteCodeChange = (newCode) => {
+      console.log('Received code change from server');
+      isRemoteChange = true;
+      setCode(newCode);
+      isRemoteChange = false;
+    };
+
+    // User list handler
+    const handleUserList = (users) => {
       const colors = {};
       users.forEach(user => {
         colors[user.username] = getUserColor(user.username);
       });
       setUserColors(colors);
       setActiveUsers(users);
-    });
+    };
 
-    socket.on('requestCode', () => {
-      socket.emit('shareCurrentCode', { roomId, code });
-    });
+    // Request code handler
+    const handleRequestCode = () => {
+      if (code && roomId) {
+        socket.emit('shareCurrentCode', { roomId, code });
+      }
+    };
 
-    socket.on('cursorUpdate', ({ userId, username, position }) => {
+    // Cursor update handler
+    const handleCursorUpdate = ({ userId, username, position }) => {
       if (editorInstance && username !== window.username) {
-        // Store cursor position
         setUserCursors(prev => ({
           ...prev,
           [userId]: { username, position }
         }));
         
-        // Get the user's color
         const color = userColors[username] || '#FF5252';
-        
-        // Create a unique decoration ID for this user
         const decorationId = `cursor-${userId}`;
-        
-        // Store decorations by user ID
         const decorationsMap = editorInstance._decorationsMap || new Map();
         editorInstance._decorationsMap = decorationsMap;
         
-        // Remove previous decoration for this user if it exists
         const prevDecorations = decorationsMap.get(decorationId) || [];
         
-        // Create the cursor decoration - simplified without username label
         const newDecorations = editorInstance.deltaDecorations(
           prevDecorations,
-          [
-            // Vertical cursor line
-            {
-              range: {
-                startLineNumber: position.lineNumber,
-                startColumn: position.column,
-                endLineNumber: position.lineNumber,
-                endColumn: position.column + 1
-              },
-              options: {
-                className: `remote-cursor-line-${userId}`,
-                hoverMessage: { value: username },
-                stickiness: 1
-              }
+          [{
+            range: {
+              startLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endLineNumber: position.lineNumber,
+              endColumn: position.column + 1
+            },
+            options: {
+              className: `remote-cursor-line-${userId}`,
+              hoverMessage: { value: username },
+              stickiness: 1
             }
-          ]
+          }]
         );
         
-        // Store the new decorations
         decorationsMap.set(decorationId, newDecorations);
         
-        // Add or update the CSS for this cursor
         let style = document.getElementById(`cursor-style-${userId}`);
         if (!style) {
           style = document.createElement('style');
@@ -146,7 +216,6 @@ const App = () => {
           document.head.appendChild(style);
         }
         
-        // Set the CSS for this cursor with the user's color - removed username flag
         style.innerHTML = `
           .remote-cursor-line-${userId} {
             background-color: ${color};
@@ -156,17 +225,28 @@ const App = () => {
           }
         `;
       }
-    });
+    };
 
+    // Set up event listeners
+    socket.on('codeChange', handleRemoteCodeChange);
+    socket.on('userList', handleUserList);
+    socket.on('requestCode', handleRequestCode);
+    socket.on('cursorUpdate', handleCursorUpdate);
+
+    // Cleanup
     return () => {
       socket.off('connect');
+      socket.off('disconnect');
       socket.off('connect_error');
-      socket.off('codeChange');
-      socket.off('userList');
-      socket.off('requestCode');
-      socket.off('cursorUpdate');
+      socket.off('roomJoined');
+      socket.off('error');
+      clearInterval(pingInterval);
+      socket.off('codeChange', handleRemoteCodeChange);
+      socket.off('userList', handleUserList);
+      socket.off('requestCode', handleRequestCode);
+      socket.off('cursorUpdate', handleCursorUpdate);
     };
-  }, [code, roomId, editorInstance, userColors]);
+  }, []);
 
   const handleEditorDidMount = (editor, monaco) => {
     setEditorInstance(editor);
@@ -174,7 +254,7 @@ const App = () => {
 
     // Track cursor position
     editor.onDidChangeCursorPosition((e) => {
-      if (isJoined) {
+      if (joinedRoom) {
         socket.emit('cursorMove', {
           roomId,
           position: {
@@ -186,19 +266,15 @@ const App = () => {
     });
   };
 
+  // Add a function to handle editor code changes
   const handleCodeChange = (newCode) => {
-    setCode(newCode);
-    if (isJoined) {
-      socket.emit('codeChange', { roomId, code: newCode });
-    }
-  };
-
-  const joinRoom = () => {
-    if (username && roomId) {
-      // Store username globally to identify self
-      window.username = username;
-      socket.emit('joinRoom', { roomId, username });
-      setIsJoined(true);
+    if (!isRemoteChange) {
+      setCode(newCode);
+      
+      // Only emit if we're in a room and this isn't a remote change
+      if (joinedRoom) {
+        socket.emit('codeChange', { roomId, code: newCode });
+      }
     }
   };
 
@@ -233,7 +309,7 @@ const App = () => {
       }
       
       // Emit to socket for collaborative editing
-      if (isJoined) {
+      if (joinedRoom) {
         socket.emit('codeOutput', { roomId, output: result });
       }
       
@@ -254,7 +330,7 @@ const App = () => {
 
   const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
 
-  if (!isJoined) {
+  if (!joinedRoom) {
     return (
       <JoinRoom
         username={username}
@@ -262,6 +338,7 @@ const App = () => {
         roomId={roomId}
         setRoomId={setRoomId}
         joinRoom={joinRoom}
+        connectionError={connectionError}
       />
     );
   }

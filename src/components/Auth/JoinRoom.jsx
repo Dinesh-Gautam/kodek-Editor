@@ -1,8 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import SplashCursor from '../../../reactbits/splashcursor'
 import '../../styles/Auth/JoinRoom.css';
 
-export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom }) => {
+export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom, connectionError }) => {
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Memoize the splash cursor configuration
+  const splashConfig = useMemo(() => ({
+    SIM_RESOLUTION: 32,
+    DYE_RESOLUTION: 256,
+    CAPTURE_RESOLUTION: 128,
+    PRESSURE_ITERATIONS: 6,
+    PERFORMANCE_MODE: true,
+    DENSITY_DISSIPATION: isTyping ? 15.0 : 6.0,
+    VELOCITY_DISSIPATION: isTyping ? 12.0 : 4.0,
+    SPLAT_FORCE: isTyping ? 800 : 3000,
+    SPLAT_RADIUS: 0.1,
+    COLOR_UPDATE_SPEED: 2,
+    CURL: 1
+  }), [isTyping]);
+
+  // Debounce typing state changes
+  const handleInputFocus = useCallback(() => {
+    setIsTyping(true);
+  }, []);
+
+  const handleInputBlur = useCallback(() => {
+    setIsTyping(false);
+  }, []);
+
   return (
+    <>
+    <SplashCursor {...splashConfig} />
     <div className="join-container">
       <div className="join-form">
         <div className="join-logo">
@@ -22,6 +51,8 @@ export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom })
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
           />
         </div>
         
@@ -35,6 +66,8 @@ export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom })
             placeholder="Enter room ID"
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
           />
         </div>
         
@@ -50,10 +83,17 @@ export const JoinRoom = ({ username, setUsername, roomId, setRoomId, joinRoom })
           </svg>
         </button>
         
+        {connectionError && (
+          <div className="error-message">
+            {connectionError}
+          </div>
+        )}
+
         <div className="join-footer">
           <span>Start coding together in seconds</span>
         </div>
       </div>
     </div>
+    </>
   );
 }; 
