@@ -22,7 +22,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   background-color: var(--bg-darker);
   color: var(--text);
   height: 100%;
@@ -82,7 +83,8 @@ html, body {
   outline: none;
 }
 
-.language-select:hover, .language-select:focus {
+.language-select:hover,
+.language-select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 1px var(--primary-transparent);
 }
@@ -146,7 +148,11 @@ html, body {
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.5px;
-  background-image: linear-gradient(to right, var(--panel-header), rgba(21, 21, 21, 0.9));
+  background-image: linear-gradient(
+    to right,
+    var(--panel-header),
+    rgba(21, 21, 21, 0.9)
+  );
 }
 
 .panel-header span {
@@ -332,9 +338,17 @@ html, body {
   width: 100vw;
   height: 100vh;
   background-color: var(--bg-darker);
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.05) 0%, transparent 50%), 
-    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  background-image:
+    radial-gradient(
+      circle at 25% 25%,
+      rgba(139, 92, 246, 0.05) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      rgba(139, 92, 246, 0.05) 0%,
+      transparent 50%
+    );
   position: relative;
   overflow: hidden;
   position: fixed;
@@ -349,7 +363,11 @@ html, body {
   position: absolute;
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.1) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   top: 10%;
   left: 15%;
@@ -361,7 +379,11 @@ html, body {
   position: absolute;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.08) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   bottom: 10%;
   right: 15%;
@@ -424,7 +446,9 @@ html, body {
   width: 100%;
   max-width: 420px;
   border: 1px solid var(--border);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   position: absolute;
   top: 15%;
   left: 37%;
@@ -581,7 +605,9 @@ html, body {
   margin: 0 1rem;
 }
 
-.room-badge, .users-badge, .current-user-badge {
+.room-badge,
+.users-badge,
+.current-user-badge {
   display: flex;
   flex-direction: column;
   background-color: var(--panel-bg);
@@ -593,12 +619,16 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.room-badge:hover, .users-badge:hover, .current-user-badge:hover {
+.room-badge:hover,
+.users-badge:hover,
+.current-user-badge:hover {
   border-color: var(--border-light);
   transform: translateY(-1px);
 }
 
-.room-label, .users-label, .current-user-label {
+.room-label,
+.users-label,
+.current-user-label {
   font-size: 0.7rem;
   text-transform: uppercase;
   color: var(--text-secondary);
@@ -606,7 +636,9 @@ html, body {
   margin-bottom: 2px;
 }
 
-.room-id, .users-list, .current-user-name {
+.room-id,
+.users-list,
+.current-user-name {
   font-size: 0.9rem;
   color: var(--text);
   font-weight: 500;
@@ -635,7 +667,7 @@ html, body {
 }
 
 .remote-cursor {
-  background-color: #FF5252;
+  background-color: #ff5252;
   width: 2px !important;
   margin-left: -1px;
   position: relative;

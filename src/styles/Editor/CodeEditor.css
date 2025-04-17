@@ -39,7 +39,11 @@
 
 .panel-header {
   padding: 0.75rem 1rem;
-  background: linear-gradient(to right, var(--panel-header), rgba(15, 15, 15, 0.9));
+  background: linear-gradient(
+    to right,
+    var(--panel-header),
+    rgba(15, 15, 15, 0.9)
+  );
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
@@ -85,4 +89,4 @@
   flex-grow: 1;
   height: 100%;
   position: relative;
-} 
+}

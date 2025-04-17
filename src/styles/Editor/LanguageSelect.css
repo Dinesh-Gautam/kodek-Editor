@@ -11,7 +11,8 @@
   backdrop-filter: blur(5px);
 }
 
-.language-select:hover, .language-select:focus {
+.language-select:hover,
+.language-select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 10px var(--primary-glow);
 }
@@ -19,4 +20,4 @@
 .language-select option {
   background-color: var(--panel-bg);
   color: var(--text);
-} 
+}

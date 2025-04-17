@@ -1,12 +1,5 @@
-"use client";
+'use client';
 
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  AnimatePresence,
-} from "framer-motion";
 import {
   Children,
   cloneElement,
@@ -14,14 +7,21 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import "../src/styles/Editor/dock.css";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from 'framer-motion';
 
+import '../src/styles/Editor/dock.css';
 
 function DockItem({
   children,
-  className = "",
+  className = '',
   onClick,
   mouseX,
   spring,
@@ -43,7 +43,7 @@ function DockItem({
   const targetSize = useTransform(
     mouseDistance,
     [-distance, 0, distance],
-    [baseItemSize, magnification, baseItemSize]
+    [baseItemSize, magnification, baseItemSize],
   );
   const size = useSpring(targetSize, spring);
 
@@ -51,7 +51,7 @@ function DockItem({
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Dock item clicked!");
+    console.log('Dock item clicked!');
     if (typeof onClick === 'function') {
       onClick();
     }
@@ -74,19 +74,17 @@ function DockItem({
       role="button"
       aria-haspopup="true"
     >
-      {Children.map(children, (child) =>
-        cloneElement(child, { isHovered })
-      )}
+      {Children.map(children, (child) => cloneElement(child, { isHovered }))}
     </motion.div>
   );
 }
 
-function DockLabel({ children, className = "", ...rest }) {
+function DockLabel({ children, className = '', ...rest }) {
   const { isHovered } = rest;
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = isHovered.on("change", (latest) => {
+    const unsubscribe = isHovered.on('change', (latest) => {
       setIsVisible(latest === 1);
     });
     return () => unsubscribe();
@@ -102,7 +100,7 @@ function DockLabel({ children, className = "", ...rest }) {
           transition={{ duration: 0.2 }}
           className={`dock-label ${className}`}
           role="tooltip"
-          style={{ x: "-50%" }}
+          style={{ x: '-50%' }}
         >
           {children}
         </motion.div>
@@ -111,13 +109,13 @@ function DockLabel({ children, className = "", ...rest }) {
   );
 }
 
-function DockIcon({ children, className = "" }) {
+function DockIcon({ children, className = '' }) {
   return <div className={`dock-icon ${className}`}>{children}</div>;
 }
 
 export default function Dock({
   items,
-  className = "",
+  className = '',
   spring = { mass: 0.1, stiffness: 150, damping: 12 },
   magnification = 70,
   distance = 200,
@@ -130,14 +128,14 @@ export default function Dock({
 
   const maxHeight = useMemo(
     () => Math.max(dockHeight, magnification + magnification / 2 + 4),
-    [magnification, dockHeight]
+    [magnification, dockHeight],
   );
   const heightRow = useTransform(isHovered, [0, 1], [panelHeight, maxHeight]);
   const height = useSpring(heightRow, spring);
 
   return (
     <motion.div
-      style={{ height, scrollbarWidth: "none" }}
+      style={{ height, scrollbarWidth: 'none' }}
       className="dock-outer"
     >
       <motion.div

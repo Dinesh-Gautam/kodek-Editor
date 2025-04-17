@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { Header } from "./components/Layout/Header";
-import { CodeEditor } from "./components/Editor/CodeEditor";
-import { OutputPanel } from "./components/Editor/OutputPanel";
-import { JoinRoom } from "./components/Auth/JoinRoom";
-import { compileCode } from "./api";
-import io from "socket.io-client";
-import "./styles/common/variables.css";
-import "./styles/common/buttons.css";
-import "./styles/App.css";
-import Dock from "../reactbits/dock";
+import React, { useEffect, useState } from 'react';
 
- 
+import io from 'socket.io-client';
+
+import { compileCode } from './api';
+import { JoinRoom } from './components/Auth/JoinRoom';
+import { CodeEditor } from './components/Editor/CodeEditor';
+import { OutputPanel } from './components/Editor/OutputPanel';
+import { Header } from './components/Layout/Header';
+
+import './styles/common/variables.css';
+import './styles/common/buttons.css';
+import './styles/App.css';
+
+import Dock from '../reactbits/dock';
+
 const socket = io('http://localhost:3001', {
   timeout: 10000,
   forceNew: true,
@@ -23,11 +26,30 @@ const socket = io('http://localhost:3001', {
 let isRemoteChange = false;
 
 const languageOptions = {
-  javascript: { id: 63, defaultCode: "// Write your JavaScript code here...\nconsole.log('Hello, World!');" },
-  python: { id: 71, defaultCode: "# Write your Python code here...\nprint('Hello, World!')" },
-  c: { id: 50, defaultCode: "/* Write your C code here... */\n#include <stdio.h>\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}" },
-  cpp: { id: 54, defaultCode: "/* Write your C++ code here... */\n#include <iostream>\nusing namespace std;\nint main() {\n    cout << \"Hello, World!\" << endl;\n    return 0;\n}" },
-  java: { id: 62, defaultCode: "/* Write your Java code here... */\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, World!\");\n    }\n}" }
+  javascript: {
+    id: 63,
+    defaultCode:
+      "// Write your JavaScript code here...\nconsole.log('Hello, World!');",
+  },
+  python: {
+    id: 71,
+    defaultCode: "# Write your Python code here...\nprint('Hello, World!')",
+  },
+  c: {
+    id: 50,
+    defaultCode:
+      '/* Write your C code here... */\n#include <stdio.h>\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
+  },
+  cpp: {
+    id: 54,
+    defaultCode:
+      '/* Write your C++ code here... */\n#include <iostream>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
+  },
+  java: {
+    id: 62,
+    defaultCode:
+      '/* Write your Java code here... */\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+  },
 };
 
 const getUserColor = (username) => {
@@ -45,7 +67,7 @@ const getUserColor = (username) => {
     '#5C6BC0', // Indigo
     '#FFA726', // Orange
   ];
-  
+
   // Simple hash function to get a consistent color for the same username
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
@@ -55,14 +77,14 @@ const getUserColor = (username) => {
 };
 
 const App = () => {
-  const [language, setLanguage] = useState("javascript");
+  const [language, setLanguage] = useState('javascript');
   const [code, setCode] = useState(languageOptions[language].defaultCode);
-  const [output, setOutput] = useState("");
+  const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isOutputVisible, setIsOutputVisible] = useState(true);
-  const [username, setUsername] = useState("");
-  const [roomId, setRoomId] = useState("");
+  const [username, setUsername] = useState('');
+  const [roomId, setRoomId] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
   const [joinedRoom, setJoinedRoom] = useState(false);
@@ -96,8 +118,8 @@ const App = () => {
 
       // Set manually to true to immediately render editor while waiting for confirmation
       setJoinedRoom(true);
-      
-      console.log("Joining room, redirecting to editor...");
+
+      console.log('Joining room, redirecting to editor...');
     } catch (error) {
       console.error('Error joining room:', error);
       setConnectionError('Failed to join room');
@@ -136,7 +158,7 @@ const App = () => {
     socket.on('error', ({ message }) => {
       console.error('Server error:', message);
       setConnectionError(message);
-      
+
       // Handle username already taken error
       if (message.includes('Username is already taken')) {
         setUsernameError(true);
@@ -171,7 +193,7 @@ const App = () => {
     // User list handler
     const handleUserList = (users) => {
       const colors = {};
-      users.forEach(user => {
+      users.forEach((user) => {
         colors[user.username] = getUserColor(user.username);
       });
       setUserColors(colors);
@@ -188,44 +210,46 @@ const App = () => {
     // Cursor update handler
     const handleCursorUpdate = ({ userId, username, position }) => {
       if (editorInstance && username !== window.username) {
-        setUserCursors(prev => ({
+        setUserCursors((prev) => ({
           ...prev,
-          [userId]: { username, position }
+          [userId]: { username, position },
         }));
-        
+
         const color = userColors[username] || '#FF5252';
         const decorationId = `cursor-${userId}`;
         const decorationsMap = editorInstance._decorationsMap || new Map();
         editorInstance._decorationsMap = decorationsMap;
-        
+
         const prevDecorations = decorationsMap.get(decorationId) || [];
-        
+
         const newDecorations = editorInstance.deltaDecorations(
           prevDecorations,
-          [{
-            range: {
-              startLineNumber: position.lineNumber,
-              startColumn: position.column,
-              endLineNumber: position.lineNumber,
-              endColumn: position.column + 1
+          [
+            {
+              range: {
+                startLineNumber: position.lineNumber,
+                startColumn: position.column,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column + 1,
+              },
+              options: {
+                className: `remote-cursor-line-${userId}`,
+                hoverMessage: { value: username },
+                stickiness: 1,
+              },
             },
-            options: {
-              className: `remote-cursor-line-${userId}`,
-              hoverMessage: { value: username },
-              stickiness: 1
-            }
-          }]
+          ],
         );
-        
+
         decorationsMap.set(decorationId, newDecorations);
-        
+
         let style = document.getElementById(`cursor-style-${userId}`);
         if (!style) {
           style = document.createElement('style');
           style.id = `cursor-style-${userId}`;
           document.head.appendChild(style);
         }
-        
+
         style.innerHTML = `
           .remote-cursor-line-${userId} {
             background-color: ${color};
@@ -269,8 +293,8 @@ const App = () => {
           roomId,
           position: {
             lineNumber: e.position.lineNumber,
-            column: e.position.column
-          }
+            column: e.position.column,
+          },
         });
       }
     });
@@ -280,7 +304,7 @@ const App = () => {
   const handleCodeChange = (newCode) => {
     if (!isRemoteChange) {
       setCode(newCode);
-      
+
       // Only emit if we're in a room and this isn't a remote change
       if (joinedRoom) {
         socket.emit('codeChange', { roomId, code: newCode });
@@ -291,42 +315,55 @@ const App = () => {
   const runCode = async () => {
     setIsLoading(true);
     setOutput('');
-    
+
     const timestamp = new Date().toLocaleTimeString();
-    setOutput(`<span class="output-time">[${timestamp}]</span> <span class="output-info">Running ${language} code...</span>\n\n`);
-    
+    setOutput(
+      `<span class="output-time">[${timestamp}]</span> <span class="output-info">Running ${language} code...</span>\n\n`,
+    );
+
     try {
       const result = await compileCode(code, languageOptions[language].id);
-      
+
       const newTimestamp = new Date().toLocaleTimeString();
-      
+
       if (result.status.id === 3) {
         // Accepted
-        setOutput(prevOutput => 
-          prevOutput + `<span class="output-time">[${newTimestamp}]</span> <span class="output-success">Execution successful!</span>\n\n${result.stdout || 'No output'}\n`
+        setOutput(
+          (prevOutput) =>
+            prevOutput +
+            `<span class="output-time">[${newTimestamp}]</span> <span class="output-success">Execution successful!</span>\n\n${result.stdout || 'No output'}\n`,
         );
       } else if (result.status.id === 6) {
         // Compilation error
-        setOutput(prevOutput => 
-          prevOutput + `<span class="output-time">[${newTimestamp}]</span> <span class="output-error">Compilation Error:</span>\n${result.compile_output}\n`
+        setOutput(
+          (prevOutput) =>
+            prevOutput +
+            `<span class="output-time">[${newTimestamp}]</span> <span class="output-error">Compilation Error:</span>\n${result.compile_output}\n`,
         );
       } else {
         // Runtime error or other issues
-        const errorMessage = result.stderr || result.compile_output || result.message || 'Unknown error';
-        setOutput(prevOutput => 
-          prevOutput + `<span class="output-time">[${newTimestamp}]</span> <span class="output-error">Error (${result.status.description}):</span>\n${errorMessage}\n`
+        const errorMessage =
+          result.stderr ||
+          result.compile_output ||
+          result.message ||
+          'Unknown error';
+        setOutput(
+          (prevOutput) =>
+            prevOutput +
+            `<span class="output-time">[${newTimestamp}]</span> <span class="output-error">Error (${result.status.description}):</span>\n${errorMessage}\n`,
         );
       }
-      
+
       // Emit to socket for collaborative editing
       if (joinedRoom) {
         socket.emit('codeOutput', { roomId, output: result });
       }
-      
     } catch (error) {
       const newTimestamp = new Date().toLocaleTimeString();
-      setOutput(prevOutput => 
-        prevOutput + `<span class="output-time">[${newTimestamp}]</span> <span class="output-error">Error: ${error.message}</span>\n`
+      setOutput(
+        (prevOutput) =>
+          prevOutput +
+          `<span class="output-time">[${newTimestamp}]</span> <span class="output-error">Error: ${error.message}</span>\n`,
       );
     } finally {
       setIsLoading(false);
@@ -335,15 +372,17 @@ const App = () => {
 
   const clearOutput = () => {
     const timestamp = new Date().toLocaleTimeString();
-    setOutput(`<span class="output-time">[${timestamp}]</span> <span class="output-info">Output cleared</span>\n`);
+    setOutput(
+      `<span class="output-time">[${timestamp}]</span> <span class="output-info">Output cleared</span>\n`,
+    );
   };
 
   const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
-  
+
   const toggleOutput = () => {
-    console.log("Toggle output called, current state:", isOutputVisible);
-    setIsOutputVisible(prev => !prev);
-    console.log("Output visibility will change to:", !isOutputVisible);
+    console.log('Toggle output called, current state:', isOutputVisible);
+    setIsOutputVisible((prev) => !prev);
+    console.log('Output visibility will change to:', !isOutputVisible);
   };
 
   if (!joinedRoom) {
@@ -394,8 +433,7 @@ const App = () => {
           />
         </div>
 
-        <div className="controls">
-        </div>
+        <div className="controls"></div>
       </main>
     </div>
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import '../../styles/Editor/LanguageSelect.css';
 
 export const LanguageSelect = ({ language, setLanguage, languageOptions }) => {
@@ -12,10 +13,13 @@ export const LanguageSelect = ({ language, setLanguage, languageOptions }) => {
       }}
     >
       {Object.keys(languageOptions).map((lang) => (
-        <option key={lang} value={lang}>
+        <option
+          key={lang}
+          value={lang}
+        >
           {lang.charAt(0).toUpperCase() + lang.slice(1)}
         </option>
       ))}
     </select>
   );
-}; 
+};
