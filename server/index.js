@@ -1,7 +1,8 @@
-import express from 'express';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
+
 import cors from 'cors';
+import express from 'express';
+import { Server } from 'socket.io';
 
 const app = express();
 app.use(cors());
@@ -9,13 +10,13 @@ app.use(cors());
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins for testing
-    methods: ["GET", "POST"],
-    credentials: true
+    origin: '*', // Allow all origins for testing
+    methods: ['GET', 'POST'],
+    credentials: true,
   },
   pingTimeout: 10000,
   pingInterval: 5000,
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
 });
 
 // Store active rooms and their participants
@@ -23,10 +24,10 @@ const rooms = new Map();
 
 // Basic health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'ok',
     connections: io.engine.clientsCount,
-    rooms: Array.from(rooms.keys())
+    rooms: Array.from(rooms.keys()),
   });
 });
 
@@ -60,15 +61,20 @@ io.on('connection', (socket) => {
   // Join a collaboration room
   socket.on('joinRoom', ({ roomId, username }) => {
     try {
-      console.log(`User ${username} (${socket.id}) attempting to join room ${roomId}`);
-      
+      console.log(
+        `User ${username} (${socket.id}) attempting to join room ${roomId}`,
+      );
+
       // Leave previous room if any
       if (currentRoom) {
         console.log(`User ${username} leaving previous room ${currentRoom}`);
         socket.leave(currentRoom);
         if (rooms.has(currentRoom)) {
           rooms.get(currentRoom).delete(socket.id);
-          io.in(currentRoom).emit('userList', Array.from(rooms.get(currentRoom).values()));
+          io.in(currentRoom).emit(
+            'userList',
+            Array.from(rooms.get(currentRoom).values()),
+          );
         }
       }
 
@@ -80,11 +86,15 @@ io.on('connection', (socket) => {
 
       // Check if username already exists in the room
       const existingUsers = Array.from(rooms.get(roomId).values());
-      const isDuplicateUsername = existingUsers.some(user => user.username === username);
-      
+      const isDuplicateUsername = existingUsers.some(
+        (user) => user.username === username,
+      );
+
       if (isDuplicateUsername) {
         console.log(`Username ${username} is already taken in room ${roomId}`);
-        socket.emit('error', { message: 'Username is already taken in this room' });
+        socket.emit('error', {
+          message: 'Username is already taken in this room',
+        });
         return;
       }
 
@@ -97,7 +107,10 @@ io.on('connection', (socket) => {
 
       // Log room state
       const roomUsers = Array.from(rooms.get(roomId).values());
-      console.log(`Room ${roomId} users:`, roomUsers.map(u => u.username).join(', '));
+      console.log(
+        `Room ${roomId} users:`,
+        roomUsers.map((u) => u.username).join(', '),
+      );
 
       // Confirm room join to the client
       socket.emit('roomJoined', { roomId, users: roomUsers });
@@ -122,19 +135,23 @@ io.on('connection', (socket) => {
       console.log(`Invalid code change request: Missing roomId or code`);
       return;
     }
-    
+
     if (!rooms.has(roomId)) {
       console.log(`Invalid code change request: Room ${roomId} doesn't exist`);
       return;
     }
-    
+
     if (!rooms.get(roomId).has(socket.id)) {
-      console.log(`Invalid code change request: User ${socket.id} not in room ${roomId}`);
+      console.log(
+        `Invalid code change request: User ${socket.id} not in room ${roomId}`,
+      );
       return;
     }
-    
-    console.log(`Broadcasting code change in room ${roomId} from user ${socket.id}`);
-    
+
+    console.log(
+      `Broadcasting code change in room ${roomId} from user ${socket.id}`,
+    );
+
     // Broadcast to all other users in the room
     socket.to(roomId).emit('codeChange', code);
   });
@@ -145,19 +162,21 @@ io.on('connection', (socket) => {
       console.log(`Invalid code share request: Missing roomId or code`);
       return;
     }
-    
+
     if (!rooms.has(roomId)) {
       console.log(`Invalid code share request: Room ${roomId} doesn't exist`);
       return;
     }
-    
+
     if (!rooms.get(roomId).has(socket.id)) {
-      console.log(`Invalid code share request: User ${socket.id} not in room ${roomId}`);
+      console.log(
+        `Invalid code share request: User ${socket.id} not in room ${roomId}`,
+      );
       return;
     }
-    
+
     console.log(`Sharing code in room ${roomId} from user ${socket.id}`);
-    
+
     // Send to all OTHER clients in the room (not back to sender)
     socket.to(roomId).emit('codeChange', code);
   });
@@ -172,7 +191,7 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('cursorUpdate', {
       userId: socket.id,
       username: userInfo.username,
-      position
+      position,
     });
   });
 
@@ -182,7 +201,7 @@ io.on('connection', (socket) => {
     if (currentRoom && rooms.has(currentRoom)) {
       // Remove user from room
       rooms.get(currentRoom).delete(socket.id);
-      
+
       // If room is empty, delete it
       if (rooms.get(currentRoom).size === 0) {
         console.log(`Deleting empty room: ${currentRoom}`);
@@ -190,7 +209,10 @@ io.on('connection', (socket) => {
       } else {
         // Broadcast updated user list
         const roomUsers = Array.from(rooms.get(currentRoom).values());
-        console.log(`Updated room ${currentRoom} users:`, roomUsers.map(u => u.username));
+        console.log(
+          `Updated room ${currentRoom} users:`,
+          roomUsers.map((u) => u.username),
+        );
         io.in(currentRoom).emit('userList', roomUsers);
       }
     }

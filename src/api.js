@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from 'axios';
 
-const JUDGE0_API_URL = "https://judge0-ce.p.rapidapi.com/submissions";
+const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions';
 const RAPIDAPI_KEY = import.meta.env.VITE_RAPIDAPI_KEY;
 const RAPIDAPI_HOST = import.meta.env.VITE_RAPIDAPI_HOST;
 
@@ -11,19 +11,19 @@ export const compileCode = async (code, languageId) => {
     url: JUDGE0_API_URL,
     params: {
       base64_encoded: 'false',
-      fields: '*'
+      fields: '*',
     },
     headers: {
       'content-type': 'application/json',
       'Content-Type': 'application/json',
       'X-RapidAPI-Key': RAPIDAPI_KEY,
-      'X-RapidAPI-Host': RAPIDAPI_HOST
+      'X-RapidAPI-Host': RAPIDAPI_HOST,
     },
     data: {
       source_code: code,
       language_id: languageId,
-      stdin: ''
-    }
+      stdin: '',
+    },
   };
 
   try {
@@ -36,16 +36,16 @@ export const compileCode = async (code, languageId) => {
       result = await axios.get(`${JUDGE0_API_URL}/${token}`, {
         params: {
           base64_encoded: 'false',
-          fields: '*'
+          fields: '*',
         },
         headers: {
           'X-RapidAPI-Key': RAPIDAPI_KEY,
-          'X-RapidAPI-Host': RAPIDAPI_HOST
-        }
+          'X-RapidAPI-Host': RAPIDAPI_HOST,
+        },
       });
 
       if (result.data.status.id <= 2) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } else {
         break;
       }
@@ -53,7 +53,7 @@ export const compileCode = async (code, languageId) => {
 
     return result.data;
   } catch (error) {
-    console.error("Compilation Error:", error);
-    throw new Error(error.response?.data?.message || "Failed to compile code");
+    console.error('Compilation Error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to compile code');
   }
 };
