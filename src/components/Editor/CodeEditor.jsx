@@ -1,5 +1,3 @@
-import React from 'react';
-
 import Editor from '@monaco-editor/react';
 
 import '../../styles/Editor/CodeEditor.css';
@@ -23,6 +21,7 @@ export const CodeEditor = ({
   toggleOutput,
   runCode,
   isLoading,
+  ...props
 }) => {
   // Handle the toggle output with additional debugging
   const handleToggleOutput = () => {
@@ -186,6 +185,7 @@ export const CodeEditor = ({
                 useShadows: false,
               },
             }}
+            {...props}
           />
         </div>
       </div>
