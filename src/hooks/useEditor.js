@@ -130,7 +130,7 @@ export function useEditor({ initialCode }) {
             position.column,
           ),
           options: {
-            isWholeLine: position.column <= 2,
+            isWholeLine: position.column <= 1,
             stickiness:
               monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
             className: `remote-cursor-user-${userId}`,

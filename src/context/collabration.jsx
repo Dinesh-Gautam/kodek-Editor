@@ -65,9 +65,6 @@ export function CollaborationProvider({ children }) {
   const [userCursors, setUserCursors] = useState({});
   const [selfInfo, setSelfInfo] = useState(null);
 
-  // Track whether a code change is from a remote source to prevent echo
-  let isRemoteChange = false;
-
   /**
    * Join a collaboration room
    */
@@ -124,7 +121,7 @@ export function CollaborationProvider({ children }) {
    * @param {string} newCode - New code content
    */
   const handleCodeChange = (newCode) => {
-    if (!isRemoteChange && joinedRoom && roomId && isConnected) {
+    if (joinedRoom && roomId && isConnected) {
       socket.emit('codeChange', { roomId, code: newCode });
     }
   };
@@ -211,18 +208,11 @@ export function CollaborationProvider({ children }) {
     // Code change handler
     const handleRemoteCodeChange = ({ code: newCode }) => {
       console.log('Received code change from server');
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      isRemoteChange = true;
-
       // We need to expose this event to subscribers
       const event = new CustomEvent('remoteCodeChange', {
         detail: { newCode },
       });
       window.dispatchEvent(event);
-
-      requestAnimationFrame(() => {
-        isRemoteChange = false;
-      });
     };
 
     // User list handler
