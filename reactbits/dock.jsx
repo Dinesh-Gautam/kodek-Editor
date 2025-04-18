@@ -148,7 +148,7 @@ export default function Dock({
           mouseX.set(Infinity);
         }}
         className={`dock-panel ${className}`}
-        style={{ height: panelHeight }}
+        // style={{ height: panelHeight }}
         role="toolbar"
         aria-label="Application dock"
       >
