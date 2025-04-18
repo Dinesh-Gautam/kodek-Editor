@@ -6,16 +6,12 @@
   overflow: hidden;
   background-color: var(--bg-darker);
   background-image:
-    radial-gradient(
-      circle at 10% 20%,
+    radial-gradient(circle at 10% 20%,
       rgba(139, 92, 246, 0.03) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 90% 80%,
+      transparent 50%),
+    radial-gradient(circle at 90% 80%,
       rgba(139, 92, 246, 0.03) 0%,
-      transparent 50%
-    );
+      transparent 50%);
 }
 
 .main-content {
@@ -43,9 +39,11 @@
   0% {
     box-shadow: 0 0 10px var(--primary-glow);
   }
+
   50% {
     box-shadow: 0 0 20px var(--primary-glow);
   }
+
   100% {
     box-shadow: 0 0 10px var(--primary-glow);
   }
@@ -74,8 +72,52 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
   }
 }
+
+/* --- Remote Cursor Styles --- */
+.remote-cursor {
+  /* Base style for the decoration range */
+  /* The actual background color and width are set by the inline style */
+  /* We might add a subtle border or other base styles if needed */
+  position: relative;
+  /* Needed for absolute positioning of the pseudo-element */
+  z-index: 10;
+  /* Ensure cursors are above text but below editor UI */
+}
+
+/*
+  Dynamic styles for each user's cursor color and label
+  are injected via JavaScript using <style> tags like:
+
+  .remote-cursor-user-<userId> {
+    background-color: <userColor> !important;
+    width: 2px !important;
+    position: absolute;
+  }
+
+  .remote-cursor-user-<userId>::after {
+    content: '<username>';
+    position: absolute;
+    top: -1.5em;
+    left: 0;
+    background-color: <userColor>;
+    color: white;
+    padding: 1px 4px;
+    font-size: 0.8em;
+    border-radius: 3px;
+    white-space: nowrap;
+    z-index: 20;
+    pointer-events: none; // Prevent label from interfering with mouse events
+  }
+*/
+/* Optional: Add transition for smoother movement (might impact performance) */
+/*
+.remote-cursor, .remote-cursor::after {
+  transition: top 0.1s linear, left 0.1s linear;
+}
+*/
