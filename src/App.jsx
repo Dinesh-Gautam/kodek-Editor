@@ -4,6 +4,8 @@ import './styles/common/variables.css';
 import './styles/common/buttons.css';
 import './styles/App.css';
 
+import { SmoothCursor } from '@/components/ui/smooth-cursor';
+
 import { JoinRoom } from './components/Auth/JoinRoom';
 import { CodeEditor } from './components/Editor/CodeEditor';
 import { OutputPanel } from './components/Editor/OutputPanel';
@@ -129,6 +131,7 @@ function App() {
           />
         </div>
       </main>
+      <SmoothCursor />
     </div>
   );
 }

@@ -41,6 +41,10 @@
   transition: background-color 0.2s ease;
 }
 
+.dock-item svg {
+  fill: white;
+}
+
 .dock-item:hover {
   background-color: #1a1a1a;
   border-color: #444;
