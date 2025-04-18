@@ -155,6 +155,7 @@ export const CodeEditor = memo(
           </div>
           <div className="editor-wrapper">
             <Editor
+              wrapperProps={{ ...props }}
               defaultLanguage={language}
               language={language}
               value={code}
@@ -188,7 +189,6 @@ export const CodeEditor = memo(
                   useShadows: false,
                 },
               }}
-              {...props}
             />
           </div>
         </div>

@@ -4,7 +4,7 @@ import './styles/common/variables.css';
 import './styles/common/buttons.css';
 import './styles/App.css';
 
-import { SmoothCursor } from '@/components/ui/smooth-cursor';
+import { RemoteCursors, useMouseProps } from '@/components/ui/remote-cursors';
 
 import { JoinRoom } from './components/Auth/JoinRoom';
 import { CodeEditor } from './components/Editor/CodeEditor';
@@ -48,6 +48,8 @@ function App() {
   } = useEditor({
     initialCode: LANGUAGE_OPTIONS[language].defaultCode,
   });
+
+  const mouseMoveProps = useMouseProps();
 
   // Initialize code execution
   const { output, isLoading, runCode, clearOutput } = useCodeExecution();
@@ -111,27 +113,28 @@ function App() {
 
       <main className="main-content">
         <div className="editor-container">
-          <CodeEditor
-            language={language}
-            code={code}
-            handleCodeChange={handleCodeChange}
-            handleEditorDidMount={handleEditorDidMount}
-            isFullScreen={isFullScreen}
-            toggleFullScreen={toggleFullScreen}
-            toggleOutput={toggleOutput}
-            runCode={executeCode}
-            isLoading={isLoading}
-          />
-
-          <OutputPanel
-            isFullScreen={isFullScreen}
-            isOutputVisible={isOutputVisible}
-            output={output}
-            clearOutput={clearOutput}
-          />
+          <RemoteCursors>
+            <CodeEditor
+              language={language}
+              code={code}
+              handleCodeChange={handleCodeChange}
+              handleEditorDidMount={handleEditorDidMount}
+              isFullScreen={isFullScreen}
+              toggleFullScreen={toggleFullScreen}
+              toggleOutput={toggleOutput}
+              runCode={executeCode}
+              isLoading={isLoading}
+              {...mouseMoveProps}
+            />
+            <OutputPanel
+              isFullScreen={isFullScreen}
+              isOutputVisible={isOutputVisible}
+              output={output}
+              clearOutput={clearOutput}
+            />
+          </RemoteCursors>
         </div>
       </main>
-      <SmoothCursor />
     </div>
   );
 }

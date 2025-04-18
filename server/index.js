@@ -297,6 +297,38 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('mouse-move', ({ roomId, coordinates, visible }) => {
+    if (!roomId || roomId !== currentRoom) {
+      // console.warn(`Invalid cursor move: Missing data or wrong room. Room: ${roomId}, Current: ${currentRoom}`);
+      return;
+    }
+    if (!rooms.has(roomId) || !rooms.get(roomId).has(socket.id)) {
+      // console.warn(`Invalid cursor move: Room ${roomId} doesn't exist or user ${socket.id} not in it.`);
+      return;
+    }
+
+    const roomData = rooms.get(roomId);
+    const userInfo = roomData.get(socket.id);
+
+    if (!userInfo) {
+      console.warn(`User info not found for ${socket.id} in room ${roomId}`);
+      return;
+    }
+
+    // Update cursor position in server state
+    if (coordinates) userInfo.coordinates = coordinates;
+    roomData.set(socket.id, userInfo); // Update the map entry
+
+    // Broadcast to all other users in the room
+    socket.to(roomId).emit('mouse-update', {
+      userId: socket.id,
+      username: userInfo.username,
+      coordinates: userInfo.coordinates,
+      visible,
+      color: userInfo.color, // Include color
+    });
+  });
+
   // Handle disconnection
   socket.on('disconnect', (reason) => {
     console.log(`User disconnected: ${socket.id}, Reason: ${reason}`);

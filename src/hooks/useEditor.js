@@ -35,6 +35,15 @@ export function useEditor({ initialCode }) {
     setEditorInstance(editor);
     monacoRef.current = monaco;
 
+    const event = new CustomEvent('editor-loaded', {
+      detail: {
+        editorInstance: editor,
+        monaco,
+      },
+    });
+
+    window.dispatchEvent(event);
+
     if (!decorationsCollectionRef.current) {
       decorationsCollectionRef.current = editor.createDecorationsCollection();
     }

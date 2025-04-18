@@ -39,6 +39,8 @@ import { SOCKET_CONFIG } from '../utils/constants';
  * @property {UserInfo[]} activeUsers - List of active users
  * @property {UserInfo|null} selfInfo - Current user info
  * @property {Object.<string, CursorData>} userCursors - Map of user cursor data
+ * @property {Object.<string, Object>} userMousePointers - Map of user mouse pointer data
+ * @property {function} setUserMousePointers - Set user mouse pointer state
  * @property {function} handleCodeChange - Handle code changes
  * @property {function} handleCursorMove - Handle cursor movement
  * @property {function} handleEditorBlur - Handle editor blur
@@ -64,6 +66,9 @@ export function CollaborationProvider({ children }) {
   const [activeUsers, setActiveUsers] = useState([]);
   const [userCursors, setUserCursors] = useState({});
   const [selfInfo, setSelfInfo] = useState(null);
+
+  const [isMouseInsideEditor, setIsMouseInsideEditor] = useState(false);
+  const [userMousePointers, setUserMousePointers] = useState({});
 
   /**
    * Join a collaboration room
@@ -106,6 +111,11 @@ export function CollaborationProvider({ children }) {
       setUserCursors((prev) => {
         const { [userId]: removedUserCursor, ...rest } = prev;
         console.log('Removed user cursoer', removedUserCursor);
+        return rest;
+      });
+      setUserMousePointers((prev) => {
+        const { [userId]: removedPointer, ...rest } = prev;
+        console.log('Removed user pointers ', removedPointer);
         return rest;
       });
     }
@@ -289,9 +299,13 @@ export function CollaborationProvider({ children }) {
     activeUsers,
     selfInfo,
     userCursors,
+    userMousePointers,
+    setUserMousePointers,
     handleCodeChange,
     handleCursorMove,
     handleEditorBlur,
+    isMouseInsideEditor,
+    setIsMouseInsideEditor,
     socket,
   };
 
