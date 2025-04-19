@@ -34,7 +34,7 @@ export const LANGUAGE_OPTIONS = {
  * @type {Object}
  */
 export const SOCKET_CONFIG = {
-  serverUrl: 'http://localhost:3001',
+  serverUrl: import.meta.VITE_SOCKET_URL,
   options: {
     timeout: 10000,
     forceNew: true,

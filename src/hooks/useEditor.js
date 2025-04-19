@@ -26,6 +26,8 @@ export function useEditor({ initialCode }) {
     handleEditorBlur,
   } = useCollaboration();
 
+  const isRemoteUpdateRef = useRef(false);
+
   /**
    * Handle editor initialization
    * @param {Object} editor - Monaco editor instance
@@ -48,7 +50,9 @@ export function useEditor({ initialCode }) {
       decorationsCollectionRef.current = editor.createDecorationsCollection();
     }
 
-    editor.focus();
+    editor.onKeyDown(() => {
+      isRemoteUpdateRef.current = false;
+    });
 
     // Set up cursor position tracking
     editor.onDidChangeCursorPosition((e) => {
@@ -87,8 +91,19 @@ export function useEditor({ initialCode }) {
 
   // Listen for remote code changes
   useEffect(() => {
+    if (!editorInstance) return;
+
     const handleRemoteCodeChange = (event) => {
-      setCode(event.detail.newCode);
+      isRemoteUpdateRef.current = true;
+      const code = event.detail.newCode;
+      const manaco = monacoRef.current;
+
+      editorInstance.executeEdits('code-change', [
+        {
+          range: new manaco.Range(Infinity, Infinity, 1, 1),
+          text: code,
+        },
+      ]);
     };
 
     window.addEventListener('remoteCodeChange', handleRemoteCodeChange);
@@ -96,7 +111,7 @@ export function useEditor({ initialCode }) {
     return () => {
       window.removeEventListener('remoteCodeChange', handleRemoteCodeChange);
     };
-  }, []);
+  }, [editorInstance]);
 
   // Update cursor decorations when users change
   useEffect(() => {
@@ -218,6 +233,7 @@ export function useEditor({ initialCode }) {
     isFullScreen,
     isOutputVisible,
     editorInstance,
+    isRemoteUpdateRef,
     handleEditorDidMount,
     handleCodeChange,
     toggleFullScreen,

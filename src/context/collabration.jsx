@@ -132,7 +132,7 @@ export function CollaborationProvider({ children }) {
    */
   const handleCodeChange = (newCode) => {
     if (joinedRoom && roomId && isConnected) {
-      socket.emit('codeChange', { roomId, code: newCode });
+      socket.emit('codeChange', { roomId, code: newCode, userId: selfInfo.id });
     }
   };
 
@@ -216,7 +216,8 @@ export function CollaborationProvider({ children }) {
     };
 
     // Code change handler
-    const handleRemoteCodeChange = ({ code: newCode }) => {
+    const handleRemoteCodeChange = ({ code: newCode, userId }) => {
+      if (userId === selfInfo.id) return;
       console.log('Received code change from server');
       // We need to expose this event to subscribers
       const event = new CustomEvent('remoteCodeChange', {
