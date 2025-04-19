@@ -1,6 +1,5 @@
-import { LanguageSelect } from '../Editor/LanguageSelect';
-
 import '../../styles/Layout/Header.css';
+import StaggeredDropDown from '../../../reactbits/StaggeredDropDown'; // adjust the path accordingly
 
 export const Header = ({
   language,
@@ -54,7 +53,7 @@ export const Header = ({
             </span>
           </div>
         </div>
-        <LanguageSelect
+        <StaggeredDropDown
           language={language}
           setLanguage={setLanguage}
           languageOptions={languageOptions}
