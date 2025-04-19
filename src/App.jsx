@@ -45,7 +45,6 @@ function App() {
     handleCodeChange,
     toggleFullScreen,
     toggleOutput,
-    isRemoteUpdateRef,
   } = useEditor({
     initialCode: LANGUAGE_OPTIONS[language].defaultCode,
   });
@@ -118,9 +117,6 @@ function App() {
             <CodeEditor
               language={language}
               code={code}
-              handleCodeChange={(e) =>
-                !isRemoteUpdateRef.current && handleCodeChange(e)
-              }
               handleEditorDidMount={handleEditorDidMount}
               isFullScreen={isFullScreen}
               toggleFullScreen={toggleFullScreen}

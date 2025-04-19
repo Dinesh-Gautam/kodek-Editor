@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useCollaboration } from '../context/collabration';
 
@@ -54,6 +54,13 @@ export function useEditor({ initialCode }) {
       isRemoteUpdateRef.current = false;
     });
 
+    editor.onDidChangeModelContent((e) => {
+      if (isRemoteUpdateRef.current) return;
+
+      setCode(editor.getValue());
+      propagateCodeChange(e);
+    });
+
     // Set up cursor position tracking
     editor.onDidChangeCursorPosition((e) => {
       // Only send updates for user-initiated cursor changes (reason 0 or 3)
@@ -70,13 +77,8 @@ export function useEditor({ initialCode }) {
     });
   };
 
-  /**
-   * Update editor content when code changes
-   * @param {string} newCode - New code content
-   */
-  const handleCodeChange = (newCode) => {
-    setCode(newCode);
-    propagateCodeChange(newCode);
+  const handleCodeChange = (code) => {
+    setCode(code);
   };
 
   /**
@@ -94,16 +96,30 @@ export function useEditor({ initialCode }) {
     if (!editorInstance) return;
 
     const handleRemoteCodeChange = (event) => {
-      isRemoteUpdateRef.current = true;
-      const code = event.detail.newCode;
       const manaco = monacoRef.current;
 
-      editorInstance.executeEdits('code-change', [
-        {
-          range: new manaco.Range(Infinity, Infinity, 1, 1),
-          text: code,
-        },
-      ]);
+      isRemoteUpdateRef.current = true;
+
+      const changes = event.detail.changes;
+
+      for (const change of changes) {
+        console.log(
+          change,
+          new manaco.Range(
+            change.range.endColumn + 1,
+            change.range.endLineNumber + 1,
+            change.range.startColumn,
+            change.range.startLineNumber,
+          ),
+        );
+        editorInstance.executeEdits('code-change', [
+          {
+            forceMoveMarkers: true,
+            range: change.range,
+            text: change.text,
+          },
+        ]);
+      }
     };
 
     window.addEventListener('remoteCodeChange', handleRemoteCodeChange);
