@@ -412,7 +412,22 @@ io.on('connection', (socket) => {
           `User ${leavingUser.username} (${socket.id}) removed from room ${currentRoom}`,
         );
 
-        // Notify remaining users
+        let updatedRoomUsers = Array.from(roomData.values()); // Get users after removal
+
+        if (leavingUser.host && roomData.size > 0) {
+          // If the leaving user was the host and others remain
+          const newHostUser = updatedRoomUsers[0]; // Assign the first remaining user as host
+          if (newHostUser) {
+            const updatedNewHost = { ...newHostUser, host: true };
+            roomData.set(newHostUser.id, updatedNewHost); // Update the map
+            updatedRoomUsers = Array.from(roomData.values()); // Refresh user list with new host status
+            console.log(
+              `Assigned new host: ${newHostUser.username} (${newHostUser.id}) in room ${currentRoom}`,
+            );
+          }
+        }
+
+        // Notify remaining users about the departure
         socket.to(currentRoom).emit('userLeft', {
           userId: socket.id,
           username: leavingUser.username,
@@ -423,13 +438,14 @@ io.on('connection', (socket) => {
           console.log(`Deleting empty room: ${currentRoom}`);
           rooms.delete(currentRoom);
         } else {
-          // Broadcast updated user list
-          const roomUsers = Array.from(roomData.values());
+          // Broadcast updated user list (potentially with new host)
           console.log(
             `Updated room ${currentRoom} users:`,
-            roomUsers.map((u) => u.username),
+            updatedRoomUsers.map(
+              (u) => `${u.username}${u.host ? ' (Host)' : ''}`,
+            ), // Log host status
           );
-          io.in(currentRoom).emit('userList', roomUsers);
+          io.in(currentRoom).emit('userList', updatedRoomUsers); // Send the potentially updated list
         }
       } else {
         console.log(
