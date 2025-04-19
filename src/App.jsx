@@ -54,27 +54,10 @@ function App() {
   // Initialize code execution
   const { output, isLoading, runCode, clearOutput } = useCodeExecution();
 
-  // Listen for code requests from new users
-  useEffect(() => {
-    const handleCodeRequest = (event) => {
-      const { requesterId } = event.detail;
-      if (requesterId && code) {
-        // Use custom event to notify the collaboration hook
-        const shareEvent = new CustomEvent('shareCode', {
-          detail: { code, requesterId },
-        });
-        window.dispatchEvent(shareEvent);
-      }
-    };
-
-    window.addEventListener('codeRequest', handleCodeRequest);
-    return () => window.removeEventListener('codeRequest', handleCodeRequest);
-  }, [code]);
-
   // Update code when language changes
-  useEffect(() => {
-    handleCodeChange(LANGUAGE_OPTIONS[language].defaultCode);
-  }, [language]);
+  // useEffect(() => {
+  //   handleCodeChange(LANGUAGE_OPTIONS[language].defaultCode);
+  // }, [language]);
 
   /**
    * Execute current code

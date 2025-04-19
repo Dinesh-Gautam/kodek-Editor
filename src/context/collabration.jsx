@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import io from 'socket.io-client';
 
@@ -69,6 +69,8 @@ export function CollaborationProvider({ children }) {
 
   const [isMouseInsideEditor, setIsMouseInsideEditor] = useState(false);
   const [userMousePointers, setUserMousePointers] = useState({});
+
+  const initialCodeRef = useRef(null);
 
   /**
    * Join a collaboration room
@@ -168,6 +170,33 @@ export function CollaborationProvider({ children }) {
   };
 
   useEffect(() => {
+    if (!selfInfo) return;
+
+    // Code change handler
+    const handleRemoteCodeChange = ({ userId, initial, data }) => {
+      if (userId === selfInfo.id) return;
+      console.log('Received code change from server');
+
+      if (initial) {
+        console.log('recieved initial value');
+        initialCodeRef.current = data.code;
+        return;
+      }
+
+      const event = new CustomEvent('remoteCodeChange', {
+        detail: data,
+      });
+      window.dispatchEvent(event);
+    };
+
+    socket.on('codeChange', handleRemoteCodeChange);
+
+    return () => {
+      socket.off('codeChange', handleRemoteCodeChange);
+    };
+  }, [selfInfo]);
+
+  useEffect(() => {
     // Connection handlers
     const onConnect = () => {
       console.log('Connected to server', socket.id);
@@ -219,17 +248,6 @@ export function CollaborationProvider({ children }) {
       }
     };
 
-    // Code change handler
-    const handleRemoteCodeChange = ({ userId, data }) => {
-      if (userId === selfInfo.id) return;
-      console.log('Received code change from server');
-      // We need to expose this event to subscribers
-      const event = new CustomEvent('remoteCodeChange', {
-        detail: data,
-      });
-      window.dispatchEvent(event);
-    };
-
     // User list handler
     const handleUserList = (users) => {
       setActiveUsers(users);
@@ -237,10 +255,13 @@ export function CollaborationProvider({ children }) {
 
     // Request code handler
     const handleRequestCode = ({ requesterId }) => {
+      console.log('Request to share code received from server!', requesterId);
       // We need to expose this event to subscribers
       const event = new CustomEvent('codeRequest', { detail: { requesterId } });
       window.dispatchEvent(event);
     };
+
+    // Listen for code requests from new users
 
     // Cursor update handler
     const handleCursorUpdate = ({
@@ -266,11 +287,17 @@ export function CollaborationProvider({ children }) {
     socket.on('connect_error', onConnectError);
     socket.on('roomJoined', onRoomJoined);
     socket.on('error', onError);
-    socket.on('codeChange', handleRemoteCodeChange);
     socket.on('userList', handleUserList);
     socket.on('requestCode', handleRequestCode);
     socket.on('cursorUpdate', handleCursorUpdate);
     socket.on('userLeft', handleUserLeft);
+
+    function shareCodeHandler(e) {
+      console.log('Sharing Code', e);
+      socket.emit('shareCode', e.detail);
+    }
+
+    window.addEventListener('shareCode', shareCodeHandler);
 
     // Cleanup
     return () => {
@@ -279,11 +306,12 @@ export function CollaborationProvider({ children }) {
       socket.off('connect_error', onConnectError);
       socket.off('roomJoined', onRoomJoined);
       socket.off('error', onError);
-      socket.off('codeChange', handleRemoteCodeChange);
       socket.off('userList', handleUserList);
       socket.off('requestCode', handleRequestCode);
       socket.off('cursorUpdate', handleCursorUpdate);
       socket.off('userLeft', handleUserLeft);
+
+      window.removeEventListener('shareCode', shareCodeHandler);
 
       document
         .querySelectorAll('style[id^="cursor-style-"]')
@@ -311,6 +339,7 @@ export function CollaborationProvider({ children }) {
     handleEditorBlur,
     isMouseInsideEditor,
     setIsMouseInsideEditor,
+    initialCodeRef,
     socket,
   };
 

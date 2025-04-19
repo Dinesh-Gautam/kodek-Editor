@@ -166,7 +166,10 @@ io.on('connection', (socket) => {
       currentUser = { id: socket.id, username, color: userColor }; // Store user info
 
       // Add user to room
-      rooms.get(roomId).set(socket.id, { ...currentUser, cursor: null }); // Store full user info
+      const isHost = rooms.get(roomId).size === 0; // Check if this is the first user
+      rooms
+        .get(roomId)
+        .set(socket.id, { ...currentUser, cursor: null, host: isHost }); // Store full user info and host status
 
       // Log room state
       const roomUsers = Array.from(rooms.get(roomId).values());
@@ -182,21 +185,20 @@ io.on('connection', (socket) => {
         self: currentUser,
       }); // Send self info too
 
-      // Broadcast updated user list to ALL clients in the room
+      // // Broadcast updated user list to ALL clients in the room
       io.in(roomId).emit('userList', roomUsers);
 
-      // Request current code state from an existing user if available
-      if (roomUsers.length > 1) {
-        console.log(`Requesting code from existing users in room ${roomId}`);
-        // Ask a specific user (e.g., the first one who isn't self) to share
-        const otherUserSocketId = Array.from(rooms.get(roomId).keys()).find(
-          (id) => id !== socket.id,
-        );
-        if (otherUserSocketId) {
-          io.to(otherUserSocketId).emit('requestCode', {
-            requesterId: socket.id,
-          });
-        }
+      if (currentUser.host) return;
+
+      const hostUser = roomUsers.find((user) => user.host);
+      console.log('host', hostUser);
+      // Request current code state from an existing host if available
+      if (hostUser) {
+        console.log(`Requesting code from existing host in room ${roomId}`);
+
+        io.to(hostUser.id).emit('requestCode', {
+          requesterId: socket.id,
+        });
       }
     } catch (error) {
       console.error(`Error joining room ${roomId}:`, error);
@@ -233,7 +235,7 @@ io.on('connection', (socket) => {
   });
 
   // Share current code with new users (or specific requester)
-  socket.on('shareCurrentCode', ({ roomId, code, targetSocketId }) => {
+  socket.on('shareCode', ({ roomId, code, requesterId }) => {
     if (
       !roomId ||
       code === undefined ||
@@ -253,12 +255,12 @@ io.on('connection', (socket) => {
     }
 
     console.log(
-      `Sharing code in room ${roomId} from user ${socket.id} to ${targetSocketId || 'new users'}`,
+      `Sharing code in room ${roomId} from user ${socket.id} to ${requesterId || 'new users'}`,
     );
 
     // Send to the specific requester if provided, otherwise broadcast to others
-    if (targetSocketId) {
-      io.to(targetSocketId).emit('codeChange', { code });
+    if (requesterId) {
+      io.to(requesterId).emit('codeChange', { data: { code }, initial: true });
     } else {
       // This case might be less common now with targeted requests
       socket.to(roomId).emit('codeChange', { code });
