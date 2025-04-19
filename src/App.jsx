@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import './styles/common/variables.css';
 import './styles/common/buttons.css';
@@ -34,6 +34,7 @@ function App() {
     usernameError,
     activeUsers,
     selfInfo,
+    handleLanguageChange: propagateLanguageChange, // Get the handler
   } = useCollaboration();
 
   // Initialize editor with default code for selected language
@@ -43,21 +44,38 @@ function App() {
     isOutputVisible,
     handleEditorDidMount,
     handleCodeChange,
+    editorInstance, // Need editor instance to check current code
     toggleFullScreen,
     toggleOutput,
   } = useEditor({
     initialCode: LANGUAGE_OPTIONS[language].defaultCode,
   });
+  const currentCodeRef = useRef(code); // Ref to track current code for comparison
 
   const mouseMoveProps = useMouseProps();
 
   // Initialize code execution
   const { output, isLoading, runCode, clearOutput } = useCodeExecution();
 
-  // Update code when language changes
-  // useEffect(() => {
-  //   handleCodeChange(LANGUAGE_OPTIONS[language].defaultCode);
-  // }, [language]);
+  // Keep track of the current code in a ref
+  useEffect(() => {
+    currentCodeRef.current = code;
+  }, [code]);
+
+  // Handle local language changes and propagate
+  const handleLocalLanguageChange = useCallback(
+    (newLanguage) => {
+      setLanguage(newLanguage);
+      propagateLanguageChange(newLanguage); // Emit change to others
+
+      // Also update local editor if code hasn't changed from default
+      const currentDefaultCode = LANGUAGE_OPTIONS[language]?.defaultCode;
+      if (editorInstance && currentCodeRef.current === currentDefaultCode) {
+        handleCodeChange(LANGUAGE_OPTIONS[newLanguage].defaultCode);
+      }
+    },
+    [language, editorInstance, handleCodeChange, propagateLanguageChange],
+  );
 
   /**
    * Execute current code
@@ -65,6 +83,33 @@ function App() {
   const executeCode = () => {
     runCode(code, LANGUAGE_OPTIONS[language].id);
   };
+
+  // Listen for remote language changes
+  useEffect(() => {
+    const handleRemoteLanguageUpdate = (event) => {
+      const { language: newLanguage } = event.detail;
+      console.log('Received remote language change:', newLanguage);
+
+      // Check if the current code is the default for the current language
+      const currentDefaultCode = LANGUAGE_OPTIONS[language]?.defaultCode;
+      const editorCode = editorInstance?.getValue();
+
+      setLanguage(newLanguage); // Update language state regardless
+
+      // Only update the editor's code if it hasn't been modified by the user
+      if (editorInstance && editorCode === currentDefaultCode) {
+        console.log('Applying default code for new language:', newLanguage);
+        handleCodeChange(LANGUAGE_OPTIONS[newLanguage].defaultCode);
+      }
+    };
+
+    window.addEventListener('remoteLanguageChange', handleRemoteLanguageUpdate);
+    return () =>
+      window.removeEventListener(
+        'remoteLanguageChange',
+        handleRemoteLanguageUpdate,
+      );
+  }, [language, editorInstance, handleCodeChange]); // Add dependencies
 
   // Render join room form if not connected
   if (!joinedRoom || !selfInfo) {
@@ -87,7 +132,7 @@ function App() {
     <div className="app-container">
       <Header
         language={language}
-        setLanguage={setLanguage}
+        setLanguage={handleLocalLanguageChange} // Use the new handler
         languageOptions={LANGUAGE_OPTIONS}
         roomId={roomId}
         username={selfInfo.username}

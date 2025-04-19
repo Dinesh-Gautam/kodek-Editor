@@ -1,5 +1,3 @@
-import React from 'react';
-
 import '../../styles/Editor/LanguageSelect.css';
 
 export const LanguageSelect = ({ language, setLanguage, languageOptions }) => {
@@ -9,7 +7,6 @@ export const LanguageSelect = ({ language, setLanguage, languageOptions }) => {
       value={language}
       onChange={(e) => {
         setLanguage(e.target.value);
-        setCode(languageOptions[e.target.value].defaultCode);
       }}
     >
       {Object.keys(languageOptions).map((lang) => (
