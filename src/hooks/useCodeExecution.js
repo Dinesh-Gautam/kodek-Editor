@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { compileCode } from '../components/api/api-service';
+import { useCollaboration } from '../context/collabration'; // Import collaboration hook
 
 /**
  * Custom hook for code execution functionality
@@ -10,6 +11,7 @@ import { compileCode } from '../components/api/api-service';
 export function useCodeExecution() {
   const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { handleCodeOutput } = useCollaboration(); // Get the output handler
 
   /**
    * Format timestamp for output logs
@@ -26,8 +28,11 @@ export function useCodeExecution() {
    */
   const runCode = async (code, languageId) => {
     setIsLoading(true);
+    // Append "Running code..." instead of overwriting
     setOutput(
-      `<span class="output-time">[${getTimestamp()}]</span> <span class="output-info">Running code...</span>\n\n`,
+      (prev) =>
+        prev +
+        `<span class="output-time">[${getTimestamp()}]</span> <span class="output-info">Running code...</span>\n\n`,
     );
 
     try {
@@ -50,12 +55,19 @@ export function useCodeExecution() {
         resultOutput = `<span class="output-time">[${getTimestamp()}]</span> <span class="output-error">Error (${result.status.description}):</span>\n${errorMessage}\n`;
       }
 
+      // Update local state first
       setOutput((prev) => prev + resultOutput);
+      // Then propagate the final output string to others
+      handleCodeOutput(resultOutput);
     } catch (error) {
       setOutput(
         (prev) =>
           prev +
           `<span class="output-time">[${getTimestamp()}]</span> <span class="output-error">Error: ${error.message}</span>\n`,
+      );
+      // Propagate error message as well
+      handleCodeOutput(
+        `<span class="output-time">[${getTimestamp()}]</span> <span class="output-error">Error: ${error.message}</span>\n`,
       );
     } finally {
       setIsLoading(false);
@@ -70,6 +82,21 @@ export function useCodeExecution() {
       `<span class="output-time">[${getTimestamp()}]</span> <span class="output-info">Output cleared</span>\n`,
     );
   };
+
+  // Listen for remote code output updates
+  useEffect(() => {
+    const handleRemoteOutput = (event) => {
+      const { username, output: remoteOutput } = event.detail; // Destructure username
+      console.log(`Received remote code output from ${username}`);
+      // Prepend username info to the received output
+      const formattedRemoteOutput = `<span class="output-info">Output from ${username}:</span>\n${remoteOutput}`;
+      setOutput((prev) => prev + formattedRemoteOutput); // Append formatted remote output
+    };
+
+    window.addEventListener('remoteCodeOutput', handleRemoteOutput);
+    return () =>
+      window.removeEventListener('remoteCodeOutput', handleRemoteOutput);
+  }, []); // Empty dependency array ensures this runs once on mount
 
   return {
     output,

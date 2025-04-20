@@ -44,6 +44,8 @@ import { SOCKET_CONFIG } from '../utils/constants';
  * @property {function} handleCodeChange - Handle code changes
  * @property {function} handleCursorMove - Handle cursor movement
  * @property {function} handleEditorBlur - Handle editor blur
+ * @property {function} handleLanguageChange - Handle language changes
+ * @property {function} handleCodeOutput - Handle code output sharing
  */
 
 const socket = io(SOCKET_CONFIG.serverUrl, SOCKET_CONFIG.options);
@@ -169,6 +171,36 @@ export function CollaborationProvider({ children }) {
     }
   };
 
+  /**
+   * Handle language change and propagate to other users
+   * @param {string} language - New language selected
+   */
+  const handleLanguageChange = (language) => {
+    if (!selfInfo) return; // Ensure selfInfo is available
+    if (joinedRoom && roomId && isConnected) {
+      socket.emit('languageChange', {
+        roomId,
+        userId: selfInfo.id, // Send userId to avoid self-update loop
+        language,
+      });
+    }
+  };
+
+  /**
+   * Handle code execution output and propagate to other users
+   * @param {Object} outputData - Output data from code execution
+   */
+  const handleCodeOutput = (outputData) => {
+    if (!selfInfo) return; // Ensure selfInfo is available
+    if (joinedRoom && roomId && isConnected) {
+      socket.emit('codeOutput', {
+        roomId,
+        userId: selfInfo.id,
+        output: outputData,
+      });
+    }
+  };
+
   useEffect(() => {
     if (!selfInfo) return;
 
@@ -189,10 +221,35 @@ export function CollaborationProvider({ children }) {
       window.dispatchEvent(event);
     };
 
+    // Language change handler
+    const handleRemoteLanguageChange = ({ userId, language }) => {
+      if (userId === selfInfo.id) return; // Ignore self-emitted events
+      console.log(`Received language change from ${userId}: ${language}`);
+      const event = new CustomEvent('remoteLanguageChange', {
+        detail: { language },
+      });
+      window.dispatchEvent(event);
+    };
+
+    // Code output handler
+    const handleRemoteCodeOutput = ({ userId, username, output }) => {
+      // Destructure username
+      if (userId === selfInfo.id) return; // Ignore self-emitted events
+      console.log(`Received code output from ${username} (${userId})`);
+      const event = new CustomEvent('remoteCodeOutput', {
+        detail: { username, output }, // Pass username in detail
+      });
+      window.dispatchEvent(event);
+    };
+
     socket.on('codeChange', handleRemoteCodeChange);
+    socket.on('languageChange', handleRemoteLanguageChange);
+    socket.on('codeOutput', handleRemoteCodeOutput);
 
     return () => {
       socket.off('codeChange', handleRemoteCodeChange);
+      socket.off('languageChange', handleRemoteLanguageChange);
+      socket.off('codeOutput', handleRemoteCodeOutput);
     };
   }, [selfInfo]);
 
@@ -337,6 +394,8 @@ export function CollaborationProvider({ children }) {
     handleCodeChange,
     handleCursorMove,
     handleEditorBlur,
+    handleLanguageChange,
+    handleCodeOutput,
     isMouseInsideEditor,
     setIsMouseInsideEditor,
     initialCodeRef,

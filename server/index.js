@@ -332,6 +332,72 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Handle language changes
+  socket.on('languageChange', ({ roomId, userId, language }) => {
+    if (
+      !roomId ||
+      !language ||
+      !userId ||
+      !currentRoom ||
+      roomId !== currentRoom
+    ) {
+      console.log('Invalid language change request:', {
+        roomId,
+        language,
+        userId,
+        currentRoom,
+      });
+      return;
+    }
+    if (!rooms.has(roomId) || !rooms.get(roomId).has(socket.id)) {
+      console.log(
+        `Invalid language change: Room ${roomId} or user ${socket.id} not found.`,
+      );
+      return;
+    }
+    console.log(
+      `Broadcasting language change in room ${roomId} from user ${userId}: ${language}`,
+    );
+    // Broadcast to all other users in the room
+    socket.to(roomId).emit('languageChange', { userId, language });
+  });
+
+  // Handle code output sharing
+  socket.on('codeOutput', ({ roomId, userId, output }) => {
+    if (
+      !roomId ||
+      output === undefined ||
+      !userId ||
+      !currentRoom ||
+      roomId !== currentRoom
+    ) {
+      console.log('Invalid code output request:', {
+        roomId,
+        output,
+        userId,
+        currentRoom,
+      });
+      return;
+    }
+    const roomData = rooms.get(roomId);
+    const userInfo = roomData?.get(userId); // Get user info from the map
+
+    if (!userInfo || !userInfo.username) {
+      console.log(
+        `Could not find user info or username for userId ${userId} in room ${roomId}`,
+      );
+      return; // Don't broadcast if user info or username is missing
+    }
+    console.log(userInfo);
+    console.log(
+      `Broadcasting code output in room ${roomId} from user ${userInfo.username} (${userId})`,
+    );
+    // Broadcast to all other users in the room
+    socket
+      .to(roomId)
+      .emit('codeOutput', { userId, username: userInfo.username, output }); // Include username from map
+  });
+
   // Handle disconnection
   socket.on('disconnect', (reason) => {
     console.log(`User disconnected: ${socket.id}, Reason: ${reason}`);
