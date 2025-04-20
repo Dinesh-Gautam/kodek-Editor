@@ -194,9 +194,11 @@ io.on('connection', (socket) => {
       console.log('host', hostUser);
       // Request current code state from an existing host if available
       if (hostUser) {
-        console.log(`Requesting code from existing host in room ${roomId}`);
-
-        io.to(hostUser.id).emit('requestCode', {
+        console.log(
+          `Requesting initial state from host ${hostUser.username} in room ${roomId}`,
+        );
+        // Request code, language, and output from the host
+        io.to(hostUser.id).emit('requestInitialState', {
           requesterId: socket.id,
         });
       }
@@ -234,38 +236,51 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Share current code with new users (or specific requester)
-  socket.on('shareCode', ({ roomId, code, requesterId }) => {
-    if (
-      !roomId ||
-      code === undefined ||
-      !currentRoom ||
-      roomId !== currentRoom
-    ) {
-      console.log(
-        `Invalid code share request: Missing/invalid roomId or code, or not in room.`,
-      );
-      return;
-    }
-    if (!rooms.has(roomId) || !rooms.get(roomId).has(socket.id)) {
-      console.log(
-        `Invalid code share request: Room ${roomId} doesn't exist or user ${socket.id} not in it.`,
-      );
-      return;
-    }
+  // Share current state (code, language, output) with a specific requester
+  socket.on(
+    'shareInitialState',
+    ({ roomId, requesterId, code, language, output }) => {
+      if (
+        !roomId ||
+        !requesterId ||
+        code === undefined ||
+        language === undefined ||
+        output === undefined || // Ensure output is included
+        !currentRoom ||
+        roomId !== currentRoom
+      ) {
+        console.log(
+          `Invalid initial state share request: Missing/invalid data or not in room.`,
+          { roomId, requesterId, code, language, output, currentRoom },
+        );
+        return;
+      }
+      if (!rooms.has(roomId) || !rooms.get(roomId).has(socket.id)) {
+        console.log(
+          `Invalid initial state share request: Room ${roomId} doesn't exist or user ${socket.id} not in it.`,
+        );
+        return;
+      }
+      // Ensure the requester is actually in the room
+      if (!rooms.get(roomId).has(requesterId)) {
+        console.log(
+          `Invalid initial state share request: Requester ${requesterId} not found in room ${roomId}.`,
+        );
+        return;
+      }
 
-    console.log(
-      `Sharing code in room ${roomId} from user ${socket.id} to ${requesterId || 'new users'}`,
-    );
+      console.log(
+        `Sharing initial state in room ${roomId} from user ${socket.id} to ${requesterId}`,
+      );
 
-    // Send to the specific requester if provided, otherwise broadcast to others
-    if (requesterId) {
-      io.to(requesterId).emit('codeChange', { data: { code }, initial: true });
-    } else {
-      // This case might be less common now with targeted requests
-      socket.to(roomId).emit('codeChange', { code });
-    }
-  });
+      // Send the complete initial state to the specific requester
+      io.to(requesterId).emit('initialState', {
+        code,
+        language,
+        output,
+      });
+    },
+  );
 
   // Handle cursor position updates
   socket.on('cursorMove', ({ roomId, position, visible }) => {

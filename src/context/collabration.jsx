@@ -46,6 +46,8 @@ import { SOCKET_CONFIG } from '../utils/constants';
  * @property {function} handleEditorBlur - Handle editor blur
  * @property {function} handleLanguageChange - Handle language changes
  * @property {function} handleCodeOutput - Handle code output sharing
+ * @property {function} shareInitialState - Function for host to share initial state
+ * @property {React.MutableRefObject<Object|null>} initialStateRef - Ref holding initial state (code, lang, output) for new users
  */
 
 const socket = io(SOCKET_CONFIG.serverUrl, SOCKET_CONFIG.options);
@@ -72,7 +74,8 @@ export function CollaborationProvider({ children }) {
   const [isMouseInsideEditor, setIsMouseInsideEditor] = useState(false);
   const [userMousePointers, setUserMousePointers] = useState({});
 
-  const initialCodeRef = useRef(null);
+  // Ref to store initial state received from host
+  const initialStateRef = useRef(null);
 
   /**
    * Join a collaboration room
@@ -201,19 +204,26 @@ export function CollaborationProvider({ children }) {
     }
   };
 
+  /**
+   * Function for the host to share the initial state with a new user
+   * @param {Object} stateData - Data containing code, language, output, and requesterId
+   */
+  const shareInitialState = (stateData) => {
+    if (!selfInfo || !joinedRoom || !roomId || !isConnected) return;
+    console.log('Sharing initial state:', stateData);
+    socket.emit('shareInitialState', {
+      roomId,
+      ...stateData, // Includes code, language, output, requesterId
+    });
+  };
+
   useEffect(() => {
     if (!selfInfo) return;
 
-    // Code change handler
-    const handleRemoteCodeChange = ({ userId, initial, data }) => {
+    // Code change handler (for ongoing changes, not initial)
+    const handleRemoteCodeChange = ({ userId, data }) => {
       if (userId === selfInfo.id) return;
-      console.log('Received code change from server');
-
-      if (initial) {
-        console.log('recieved initial value');
-        initialCodeRef.current = data.code;
-        return;
-      }
+      console.log('Received ongoing code change from server');
 
       const event = new CustomEvent('remoteCodeChange', {
         detail: data,
@@ -221,21 +231,22 @@ export function CollaborationProvider({ children }) {
       window.dispatchEvent(event);
     };
 
-    // Language change handler
+    // Language change handler (for ongoing changes)
     const handleRemoteLanguageChange = ({ userId, language }) => {
       if (userId === selfInfo.id) return; // Ignore self-emitted events
-      console.log(`Received language change from ${userId}: ${language}`);
+      console.log(
+        `Received ongoing language change from ${userId}: ${language}`,
+      );
       const event = new CustomEvent('remoteLanguageChange', {
         detail: { language },
       });
       window.dispatchEvent(event);
     };
 
-    // Code output handler
+    // Code output handler (for ongoing changes)
     const handleRemoteCodeOutput = ({ userId, username, output }) => {
-      // Destructure username
       if (userId === selfInfo.id) return; // Ignore self-emitted events
-      console.log(`Received code output from ${username} (${userId})`);
+      console.log(`Received ongoing code output from ${username} (${userId})`);
       const event = new CustomEvent('remoteCodeOutput', {
         detail: { username, output }, // Pass username in detail
       });
@@ -310,15 +321,29 @@ export function CollaborationProvider({ children }) {
       setActiveUsers(users);
     };
 
-    // Request code handler
-    const handleRequestCode = ({ requesterId }) => {
-      console.log('Request to share code received from server!', requesterId);
-      // We need to expose this event to subscribers
-      const event = new CustomEvent('codeRequest', { detail: { requesterId } });
+    // Request initial state handler (from server to host)
+    const handleRequestInitialState = ({ requesterId }) => {
+      console.log(
+        `Request to share initial state received from server for ${requesterId}`,
+      );
+      // Expose this event to the App component (which holds the state)
+      const event = new CustomEvent('requestInitialState', {
+        detail: { requesterId },
+      });
       window.dispatchEvent(event);
     };
 
-    // Listen for code requests from new users
+    // Initial state handler (from server to new user)
+    const handleInitialState = ({ code, language, output }) => {
+      console.log('Received initial state from host:', {
+        code: code ? '[code present]' : '[no code]',
+        language,
+        output: output ? '[output present]' : '[no output]',
+      });
+      initialStateRef.current = { code, language, output };
+      // Dispatch event so App/hooks can react
+      window.dispatchEvent(new CustomEvent('initialStateReceived'));
+    };
 
     // Cursor update handler
     const handleCursorUpdate = ({
@@ -345,16 +370,10 @@ export function CollaborationProvider({ children }) {
     socket.on('roomJoined', onRoomJoined);
     socket.on('error', onError);
     socket.on('userList', handleUserList);
-    socket.on('requestCode', handleRequestCode);
+    socket.on('requestInitialState', handleRequestInitialState);
+    socket.on('initialState', handleInitialState);
     socket.on('cursorUpdate', handleCursorUpdate);
     socket.on('userLeft', handleUserLeft);
-
-    function shareCodeHandler(e) {
-      console.log('Sharing Code', e);
-      socket.emit('shareCode', e.detail);
-    }
-
-    window.addEventListener('shareCode', shareCodeHandler);
 
     // Cleanup
     return () => {
@@ -364,17 +383,16 @@ export function CollaborationProvider({ children }) {
       socket.off('roomJoined', onRoomJoined);
       socket.off('error', onError);
       socket.off('userList', handleUserList);
-      socket.off('requestCode', handleRequestCode);
+      socket.off('requestInitialState', handleRequestInitialState);
+      socket.off('initialState', handleInitialState);
       socket.off('cursorUpdate', handleCursorUpdate);
       socket.off('userLeft', handleUserLeft);
-
-      window.removeEventListener('shareCode', shareCodeHandler);
 
       document
         .querySelectorAll('style[id^="cursor-style-"]')
         .forEach((el) => el.remove());
     };
-  }, [selfInfo]);
+  }, [selfInfo]); // selfInfo dependency is important here
 
   const contextValue = {
     isConnected,
@@ -396,9 +414,10 @@ export function CollaborationProvider({ children }) {
     handleEditorBlur,
     handleLanguageChange,
     handleCodeOutput,
+    shareInitialState,
     isMouseInsideEditor,
     setIsMouseInsideEditor,
-    initialCodeRef,
+    initialStateRef,
     socket,
   };
 

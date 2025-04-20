@@ -100,6 +100,7 @@ export function useCodeExecution() {
 
   return {
     output,
+    setOutput, // Expose the setOutput function
     isLoading,
     runCode,
     clearOutput,

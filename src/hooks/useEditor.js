@@ -18,14 +18,12 @@ export function useEditor({ initialCode }) {
   const decorationsCollectionRef = useRef(null);
 
   const {
-    roomId,
     userCursors,
     activeUsers,
     selfInfo,
     handleCodeChange: propagateCodeChange,
     handleCursorMove,
     handleEditorBlur,
-    initialCodeRef,
   } = useCollaboration();
 
   const isRemoteUpdateRef = useRef(false);
@@ -79,8 +77,19 @@ export function useEditor({ initialCode }) {
     });
   };
 
-  const handleCodeChange = (code) => {
-    setCode(code);
+  const handleCodeChange = (newCode) => {
+    // This function is now primarily used by App.jsx to set initial/remote code
+    // It might still be useful for other local updates if needed.
+    if (editorInstance && editorInstance.getValue() !== newCode) {
+      // Avoid unnecessary updates if the code is already correct
+      // Use executeEdits to better handle undo/redo stack if needed,
+      // but setValue is simpler for initial state.
+      isRemoteUpdateRef.current = true; // Prevent loop from editor's own change event
+      editorInstance.setValue(newCode);
+      isRemoteUpdateRef.current = false;
+    }
+    // Update local state if necessary (though App.jsx manages the source of truth now)
+    setCode(newCode);
   };
 
   /**
@@ -92,36 +101,6 @@ export function useEditor({ initialCode }) {
    * Toggle output panel visibility
    */
   const toggleOutput = () => setIsOutputVisible((prev) => !prev);
-
-  useEffect(() => {
-    console.log(initialCodeRef.current, editorInstance);
-    if (initialCodeRef.current && editorInstance) {
-      editorInstance.setValue(initialCodeRef.current);
-      initialCodeRef.current = null;
-    }
-  }, [editorInstance, initialCodeRef]);
-
-  useEffect(() => {
-    if (!editorInstance || !roomId) return;
-
-    const handleCodeRequest = (event) => {
-      console.log('handling code request');
-      const { requesterId } = event.detail;
-
-      const code = editorInstance.getValue();
-
-      if (requesterId && code) {
-        // Use custom event to notify the collaboration hook
-        const shareEvent = new CustomEvent('shareCode', {
-          detail: { code, requesterId, roomId },
-        });
-        window.dispatchEvent(shareEvent);
-      }
-    };
-
-    window.addEventListener('codeRequest', handleCodeRequest);
-    return () => window.removeEventListener('codeRequest', handleCodeRequest);
-  }, [editorInstance, roomId]);
 
   // Listen for remote code changes
   useEffect(() => {
