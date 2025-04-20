@@ -205,10 +205,10 @@ io.on('connection', (socket) => {
   });
 
   // Handle code changes
-  socket.on('codeChange', ({ roomId, code }) => {
+  socket.on('codeChange', ({ roomId, userId, data }) => {
     if (
       !roomId ||
-      code === undefined ||
+      data === undefined ||
       !currentRoom ||
       roomId !== currentRoom
     ) {
@@ -227,7 +227,8 @@ io.on('connection', (socket) => {
     // console.log(`Broadcasting code change in room ${roomId} from user ${socket.id}`); // Reduce noise
     // Broadcast to all other users in the room
     socket.to(roomId).emit('codeChange', {
-      code,
+      userId,
+      data,
     });
   });
 
@@ -257,10 +258,10 @@ io.on('connection', (socket) => {
 
     // Send to the specific requester if provided, otherwise broadcast to others
     if (targetSocketId) {
-      io.to(targetSocketId).emit('codeChange', code);
+      io.to(targetSocketId).emit('codeChange', { code });
     } else {
       // This case might be less common now with targeted requests
-      socket.to(roomId).emit('codeChange', code);
+      socket.to(roomId).emit('codeChange', { code });
     }
   });
 

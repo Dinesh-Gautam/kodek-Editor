@@ -130,9 +130,13 @@ export function CollaborationProvider({ children }) {
    * Handle code changes and propagate to other users
    * @param {string} newCode - New code content
    */
-  const handleCodeChange = (newCode) => {
+  const handleCodeChange = (eventData) => {
     if (joinedRoom && roomId && isConnected) {
-      socket.emit('codeChange', { roomId, code: newCode });
+      socket.emit('codeChange', {
+        roomId,
+        userId: selfInfo.id,
+        data: eventData,
+      });
     }
   };
 
@@ -216,11 +220,12 @@ export function CollaborationProvider({ children }) {
     };
 
     // Code change handler
-    const handleRemoteCodeChange = ({ code: newCode }) => {
+    const handleRemoteCodeChange = ({ userId, data }) => {
+      if (userId === selfInfo.id) return;
       console.log('Received code change from server');
       // We need to expose this event to subscribers
       const event = new CustomEvent('remoteCodeChange', {
-        detail: { newCode },
+        detail: data,
       });
       window.dispatchEvent(event);
     };

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useCollaboration } from '../context/collabration';
 
@@ -26,6 +26,8 @@ export function useEditor({ initialCode }) {
     handleEditorBlur,
   } = useCollaboration();
 
+  const isRemoteUpdateRef = useRef(false);
+
   /**
    * Handle editor initialization
    * @param {Object} editor - Monaco editor instance
@@ -48,7 +50,16 @@ export function useEditor({ initialCode }) {
       decorationsCollectionRef.current = editor.createDecorationsCollection();
     }
 
-    editor.focus();
+    editor.onKeyDown(() => {
+      isRemoteUpdateRef.current = false;
+    });
+
+    editor.onDidChangeModelContent((e) => {
+      if (isRemoteUpdateRef.current) return;
+
+      setCode(editor.getValue());
+      propagateCodeChange(e);
+    });
 
     // Set up cursor position tracking
     editor.onDidChangeCursorPosition((e) => {
@@ -66,13 +77,8 @@ export function useEditor({ initialCode }) {
     });
   };
 
-  /**
-   * Update editor content when code changes
-   * @param {string} newCode - New code content
-   */
-  const handleCodeChange = (newCode) => {
-    setCode(newCode);
-    propagateCodeChange(newCode);
+  const handleCodeChange = (code) => {
+    setCode(code);
   };
 
   /**
@@ -87,8 +93,33 @@ export function useEditor({ initialCode }) {
 
   // Listen for remote code changes
   useEffect(() => {
+    if (!editorInstance) return;
+
     const handleRemoteCodeChange = (event) => {
-      setCode(event.detail.newCode);
+      const manaco = monacoRef.current;
+
+      isRemoteUpdateRef.current = true;
+
+      const changes = event.detail.changes;
+
+      for (const change of changes) {
+        console.log(
+          change,
+          new manaco.Range(
+            change.range.endColumn + 1,
+            change.range.endLineNumber + 1,
+            change.range.startColumn,
+            change.range.startLineNumber,
+          ),
+        );
+        editorInstance.executeEdits('code-change', [
+          {
+            forceMoveMarkers: true,
+            range: change.range,
+            text: change.text,
+          },
+        ]);
+      }
     };
 
     window.addEventListener('remoteCodeChange', handleRemoteCodeChange);
@@ -96,7 +127,7 @@ export function useEditor({ initialCode }) {
     return () => {
       window.removeEventListener('remoteCodeChange', handleRemoteCodeChange);
     };
-  }, []);
+  }, [editorInstance]);
 
   // Update cursor decorations when users change
   useEffect(() => {
@@ -218,6 +249,7 @@ export function useEditor({ initialCode }) {
     isFullScreen,
     isOutputVisible,
     editorInstance,
+    isRemoteUpdateRef,
     handleEditorDidMount,
     handleCodeChange,
     toggleFullScreen,

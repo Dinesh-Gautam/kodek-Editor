@@ -117,7 +117,6 @@ function App() {
             <CodeEditor
               language={language}
               code={code}
-              handleCodeChange={handleCodeChange}
               handleEditorDidMount={handleEditorDidMount}
               isFullScreen={isFullScreen}
               toggleFullScreen={toggleFullScreen}
