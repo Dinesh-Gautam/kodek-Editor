@@ -1,4 +1,5 @@
 import '../../styles/Layout/Header.css';
+
 import StaggeredDropDown from '../../../reactbits/StaggeredDropDown'; // adjust the path accordingly
 
 export const Header = ({
@@ -35,7 +36,7 @@ export const Header = ({
                     key={user.id} // Use unique user.id as key
                     style={{ color: user.color || '#10b981' }} // Use user.color directly
                   >
-                    {user.username}
+                    {user.username} {user.host && '(Host)'}
                     {/* Use index to check if it's the last user */}
                     {index < activeUsers.length - 1 ? ', ' : ''}
                   </span>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useCollaboration } from '../context/collabration';
 
@@ -18,12 +18,14 @@ export function useEditor({ initialCode }) {
   const decorationsCollectionRef = useRef(null);
 
   const {
+    roomId,
     userCursors,
     activeUsers,
     selfInfo,
     handleCodeChange: propagateCodeChange,
     handleCursorMove,
     handleEditorBlur,
+    initialCodeRef,
   } = useCollaboration();
 
   const isRemoteUpdateRef = useRef(false);
@@ -90,6 +92,36 @@ export function useEditor({ initialCode }) {
    * Toggle output panel visibility
    */
   const toggleOutput = () => setIsOutputVisible((prev) => !prev);
+
+  useEffect(() => {
+    console.log(initialCodeRef.current, editorInstance);
+    if (initialCodeRef.current && editorInstance) {
+      editorInstance.setValue(initialCodeRef.current);
+      initialCodeRef.current = null;
+    }
+  }, [editorInstance, initialCodeRef]);
+
+  useEffect(() => {
+    if (!editorInstance || !roomId) return;
+
+    const handleCodeRequest = (event) => {
+      console.log('handling code request');
+      const { requesterId } = event.detail;
+
+      const code = editorInstance.getValue();
+
+      if (requesterId && code) {
+        // Use custom event to notify the collaboration hook
+        const shareEvent = new CustomEvent('shareCode', {
+          detail: { code, requesterId, roomId },
+        });
+        window.dispatchEvent(shareEvent);
+      }
+    };
+
+    window.addEventListener('codeRequest', handleCodeRequest);
+    return () => window.removeEventListener('codeRequest', handleCodeRequest);
+  }, [editorInstance, roomId]);
 
   // Listen for remote code changes
   useEffect(() => {
