@@ -14,6 +14,7 @@ export const OutputPanel = ({
 
   // Use style display property instead of CSS classes for more direct control
   const panelStyle = {
+    flex: 1,
     display: !isOutputVisible || isFullScreen ? 'none' : 'flex',
   };
 
